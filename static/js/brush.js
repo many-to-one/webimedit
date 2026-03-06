@@ -44,7 +44,7 @@ let pendingBrushPoints = [];
 let isBrushRendering = false;
 
 // 🔹 AKTYWACJA NARZĘDZIA
-brushBtn.onclick = () => activateTool("brush");
+// brushBtn.onclick = () => activateTool("brush");
 
 // 🔹 OBSŁUGA WSPÓLNEJ FUNKCJI activateTool
 function activateTool(name) {
