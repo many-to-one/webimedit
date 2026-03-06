@@ -7,13 +7,16 @@ let eraserPower = 1.0;
 let pendingEraserPoints = [];
 let isRendering = false;
 
-// ELEMENTY UI
+// ELEMENTY UI – WSPÓLNE
 const eraserBtn = document.getElementById('tool-eraser');
-const brushBtn = document.getElementById('tool-brush');
-const moveBtn = document.getElementById('tool-move');
-const zoomBtn = document.getElementById('tool-zoom');
+const brushBtn  = document.getElementById('tool-brush');
+const moveBtn   = document.getElementById('tool-move');
+const zoomBtn   = document.getElementById('tool-zoom');
 
 const eraserSettings = document.getElementById('eraserSettings');
+const brushSettings  = document.getElementById('brushSettings');
+const canvas         = document.getElementById('canvas');
+
 
 // klik poza panelem = dezaktywacja narzędzi
 document.addEventListener('click', (e) => {
@@ -59,18 +62,18 @@ moveBtn.onclick = () => activateTool('move');
 zoomBtn.onclick = () => activateTool('zoom');
 
 // 🔹 Customowy okrąg kursora
-const brushCursor = document.createElement('div');
-brushCursor.style.position = 'fixed';
-brushCursor.style.pointerEvents = 'none';
-brushCursor.style.zIndex = '9999';
-brushCursor.style.width = `${eraserRadius * 2}px`;
-brushCursor.style.height = `${eraserRadius * 2}px`;
-brushCursor.style.border = '1px solid rgba(255, 0, 0, 0.8)';
-brushCursor.style.borderRadius = '50%';
-brushCursor.style.transform = 'translate(-50%, -50%)';
-brushCursor.style.display = 'none';
-brushCursor.style.mixBlendMode = 'difference';
-document.body.appendChild(brushCursor);
+const eraserCursor = document.createElement('div');
+eraserCursor.style.position = 'fixed';
+eraserCursor.style.pointerEvents = 'none';
+eraserCursor.style.zIndex = '9999';
+eraserCursor.style.width = `${eraserRadius * 2}px`;
+eraserCursor.style.height = `${eraserRadius * 2}px`;
+eraserCursor.style.border = '1px solid rgba(255, 0, 0, 0.8)';
+eraserCursor.style.borderRadius = '50%';
+eraserCursor.style.transform = 'translate(-50%, -50%)';
+eraserCursor.style.display = 'none';
+eraserCursor.style.mixBlendMode = 'difference';
+document.body.appendChild(eraserCursor);
 
 // 🔹 Slidery gumki
 document.getElementById('radiusSlider').oninput = (e) => {
@@ -83,11 +86,11 @@ document.getElementById('powerSlider').oninput = (e) => {
 
 // 🔹 Ruch kursora + kolejka punktów do gumki
 canvas.onmousemove = (e) => {
-  brushCursor.style.left = `${e.clientX}px`;
-  brushCursor.style.top = `${e.clientY}px`;
+  eraserCursor.style.left = `${e.clientX}px`;
+  eraserCursor.style.top = `${e.clientY}px`;
 
   if (toolMode === 'eraser') {
-    brushCursor.style.display = 'block';
+    eraserCursor.style.display = 'block';
 
     const image = images[currentImageIndex];
     const layer = image.layers[image.activeLayer];
@@ -99,10 +102,10 @@ canvas.onmousemove = (e) => {
     const scaleY = baseH / rect.height;
     const scale = (scaleX + scaleY) / 2;
 
-    brushCursor.style.width = `${(eraserRadius / scale) * 2}px`;
-    brushCursor.style.height = `${(eraserRadius / scale) * 2}px`;
+    eraserCursor.style.width = `${(eraserRadius / scale) * 2}px`;
+    eraserCursor.style.height = `${(eraserRadius / scale) * 2}px`;
   } else {
-    brushCursor.style.display = 'none';
+    eraserCursor.style.display = 'none';
   }
 
   if (toolMode === 'eraser' && isErasing) {
