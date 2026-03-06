@@ -1,0 +1,24 @@
+  :root {
+    --bg:#222; --card:#2d2d2d; --muted:#9aa; --accent:#6cf;
+  }
+  body{margin:12px;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:#eee;display:flex;gap:16px}
+  main{flex:1 1 auto;min-width:300px}
+  aside{width:360px;max-height:calc(100vh - 24px);overflow:auto}
+  .card{background:var(--card);padding:10px;border-radius:8px;margin-bottom:12px}
+  .card-img{margin-left: 30%; width: 1000px; height: 1000px;}
+  h2{margin:0 0 12px 0}
+  canvas{width:100%;height:auto;display:block; transform: rotateX(180deg);}
+  /* canvas{width:100%;height:auto;display:block; transform: rotateX(180deg);} */
+  .row{display:flex;gap:8px;align-items:center;margin:6px 0}
+  .row label{flex:1 1 auto;color:var(--muted);font-size:13px}
+  .row input[type=range]{flex:1 1 160px}
+  .value{width:56px;text-align:right;color:var(--accent);font-variant-numeric:tabular-nums}
+  .group{padding:8px;border-radius:6px;background:#363636;margin-bottom:6px}
+  button{background:#444;color:#fff;border:0;padding:6px 8px;border-radius:6px;cursor:pointer}
+  button:hover{background:#555}
+  @media(max-width:900px){body{flex-direction:column}aside{width:100%;order:2}main{order:1}}
+
+  #eraserBtn.active {
+    background: #0055ff;
+    color: white;
+  }

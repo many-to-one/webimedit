@@ -1,0 +1,88 @@
+/* Layer panel */
+.layer-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: visible;
+}
+
+/* Layer item */
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  background: #222;
+  color: #eee;
+  border: 1px solid #444;
+  cursor: pointer;
+  position: relative;
+}
+
+.layer-item.active {
+  background: #0055ff;
+  color: #fff;
+}
+
+/* Thumbnail */
+.layer-thumb {
+  width: 40px;
+  height: 30px;
+  object-fit: cover;
+  border: 1px solid #555;
+}
+
+/* Name input */
+.layer-name {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 14px;
+}
+
+.layer-name:focus {
+  outline: none;
+  background: #333;
+}
+
+/* Controls */
+.layer-controls {
+  display: flex;
+  gap: 6px;
+  position: relative;
+}
+
+/* Menu button */
+.layer-menu-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: inherit;
+  padding: 0 4px;
+}
+
+/* Dropdown menu */
+.layer-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #333;
+  border: 1px solid #555;
+  padding: 4px 0;
+  z-index: 10;
+  display: none;
+  min-width: 100px;
+}
+
+.layer-menu div {
+  padding: 6px 12px;
+  cursor: pointer;
+  color: white;
+  white-space: nowrap;
+}
+
+.layer-menu div:hover {
+  background: #444;
+}

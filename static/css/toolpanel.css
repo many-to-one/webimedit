@@ -1,0 +1,69 @@
+/* TOOLBOX PANEL */
+#toolPanel {
+  position: fixed;
+  left: 12px;
+  top: 120px;
+  width: 60px;
+  background: #2b2b2b;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 2000;
+}
+
+.toolBtn {
+  width: 44px;
+  height: 44px;
+  background: #3a3a3a;
+  border: 1px solid #555;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.toolBtn img {
+  width: 24px;
+  height: 24px;
+  opacity: 0.8;
+}
+
+.toolBtn:hover {
+  background: #4a4a4a;
+}
+
+.toolBtn.active {
+  background: #5a5a5a;
+  border-color: #999;
+}
+
+/* TOOL SETTINGS PANEL */
+#toolSettings {
+  position: fixed;
+  left: 90px;
+  top: 120px;
+  width: 220px;
+  background: #2b2b2b;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  color: #ddd;
+  font-size: 14px;
+  z-index: 2000;
+}
+
+.settingsGroup label {
+  display: block;
+  margin-top: 10px;
+  margin-bottom: 4px;
+  font-size: 13px;
+  color: #bbb;
+}
+
+.settingsGroup input[type="range"] {
+  width: 100%;
+}

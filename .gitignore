@@ -1,0 +1,109 @@
+# -----------------------------
+# PYTHON
+# -----------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.so
+*.dll
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# -----------------------------
+# FASTAPI / UVICORN
+# -----------------------------
+*.log
+*.pid
+
+# Uploaded or processed images
+uploads/
+results/
+temp/
+cache/
+
+# -----------------------------
+# FRONTEND (JS / STATIC)
+# -----------------------------
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.cache/
+frontend/.parcel-cache/
+frontend/.vite/
+frontend/.next/
+frontend/.nuxt/
+
+# Static generated files
+static/*.map
+static/*.tmp
+static/*.cache
+static/*.bak
+
+# -----------------------------
+# WEBVIEW / DESKTOP APP
+# -----------------------------
+webview_build/
+build/
+dist/
+*.spec
+
+# Electron/Tauri (if used later)
+src-tauri/target/
+src-tauri/.cargo/
+src-tauri/.rustup/
+
+# -----------------------------
+# C++ / PYBIND11 / WASM
+# -----------------------------
+*.o
+*.obj
+*.a
+*.lib
+*.exp
+*.idb
+*.ilk
+*.manifest
+*.map
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Emscripten / WASM
+*.wasm
+*.js.mem
+*.data
+*.edd/
+*.tmp
+
+# -----------------------------
+# OS / EDITOR FILES
+# -----------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# VSCode
+.vscode/
+.history/
+
+# PyCharm / JetBrains
+.idea/
+
+# -----------------------------
+# ENV / SECRETS
+# -----------------------------
+.env
+.env.*
+*.key
+*.pem
