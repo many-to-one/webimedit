@@ -68,7 +68,8 @@
                 <option value="custom">Custom (load)</option>
             </select>
 
-            <input type="file" id="customBrushInput" accept="image/*" style="display:none">
+            <input type="file" id="customBrushInput" accept=".png,.jpg,.jpeg,.webp,.gif,.bmp,.abr">
+
             </div>
 
         </div>
@@ -265,6 +266,8 @@
   </aside>
 
 
+<script src="https://unpkg.com/abr-js/dist/abr.min.js"></script>
+
 <script src="/static/js/basic.js"></script>
 <script src="/static/js/layers.js"></script>
 <script src="/static/js/shader.js"></script>
@@ -273,7 +276,7 @@
 <script src="/static/js/draw.js"></script>
 <script src="/static/js/tools.js"></script>
 
-<!-- <script src="/static/js/zoom.js"></script> -->
+<script src="/static/js/zoom.js"></script>
 <script src="/static/js/ui_helpers.js"></script>
 <script src="/static/js/save.js"></script>
 

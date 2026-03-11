@@ -1,6 +1,8 @@
 // =========================
 // GLOBALNE STANY NARZĘDZI
 // =========================
+window.ABR
+
 var toolMode = "paint";
 
 // ERASER STATE
@@ -144,13 +146,31 @@ brushShapeInput.onchange = e => {
     if (brushShape === "custom") customBrushInput.click();
 };
 
-customBrushInput.onchange = e => {
+// customBrushInput.onchange = e => {
+//     const file = e.target.files[0];
+//     if (!file) return;
+//     const img = new Image();
+//     img.onload = () => customBrushImage = img;
+//     img.src = URL.createObjectURL(file);
+// };
+customBrushInput.onchange = async e => {
     const file = e.target.files[0];
     if (!file) return;
-    const img = new Image();
-    img.onload = () => customBrushImage = img;
-    img.src = URL.createObjectURL(file);
+
+    const buffer = await file.arrayBuffer();
+
+    // Używamy globalnego ABR z window
+    const abr = window.ABR.from(buffer);
+
+    // Weź pierwszy brush
+    const brush = abr.brushes[0];
+
+    // Konwersja na obraz
+    const image = brush.toImage();
+
+    customBrushImage = image;
 };
+
 
 // =========================
 // MOUSEMOVE – KURSORY + KOLEJKI

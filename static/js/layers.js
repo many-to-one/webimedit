@@ -9,13 +9,21 @@ const layerPanel = document.getElementById('layerPanel');
 function addLayer(name = `Layer ${images[currentImageIndex].layers.length + 1}`) {
   const image = images[currentImageIndex];
 
+  // Copy settings from current active layer instead of using defaults
+  const currentLayer = image.layers[image.activeLayer];
+  const sourceSettings = currentLayer ? currentLayer.settings : {
+    basic: { ...defaultBasicValues },
+    calibration: { ...defaultCalibrationValues },
+    hsl: Array(8).fill().map(() => ({ hue: 0, sat: 1, lig: 1 }))
+  };
+
   image.layers.unshift({
     name,
     visible: true,
     settings: {
-      basic: { ...defaultBasicValues },
-      calibration: { ...defaultCalibrationValues },
-      hsl: Array(8).fill().map(() => ({ hue: 0, sat: 1, lig: 1 }))
+      basic: { ...sourceSettings.basic },
+      calibration: { ...sourceSettings.calibration },
+      hsl: sourceSettings.hsl.map(h => ({ ...h }))
     },
     mask: null,
   });
