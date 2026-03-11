@@ -22,9 +22,9 @@ function draw() {
     const layer = visibleLayers[i];
     const s = layer.settings;
 
-    // Bind main image texture
+    // Bind main image texture (use layer.tex if exists, else global tex)
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, tex); // gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.bindTexture(gl.TEXTURE_2D, layer.tex || tex);
     gl.uniform1i(gl.getUniformLocation(prog, "u_tex"), 0);
 
     // Bind mask texture if it exists

@@ -1,4 +1,4 @@
-const canvas = document.getElementById('glcanvas');
+var canvas = document.getElementById('glcanvas');
 
 const galleryEl = document.getElementById('gallery');
 

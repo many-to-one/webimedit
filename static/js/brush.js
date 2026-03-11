@@ -3,6 +3,7 @@ let brushRadius = 40;
 let brushColor = "#000000";
 let brushShape = "circle";
 let customBrushImage = null;
+const brushBtn  = document.getElementById('tool-brush');
 
 // INPUTY (to są unikalne elementy, więc mogą być tu)
 const brushColorInput  = document.getElementById("brushColor");
@@ -28,7 +29,7 @@ customBrushInput.onchange = e => {
 };
 
 // 🔹 KURSOR BRUSHA
-const brushCursor = document.createElement("div");
+// const brushCursor = document.createElement("div");
 brushCursor.style.position = "fixed";
 brushCursor.style.pointerEvents = "none";
 brushCursor.style.zIndex = "9999";
@@ -44,27 +45,27 @@ let pendingBrushPoints = [];
 let isBrushRendering = false;
 
 // 🔹 AKTYWACJA NARZĘDZIA
-// brushBtn.onclick = () => activateTool("brush");
+brushBtn.onclick = () => activateTool("brush");
 
 // 🔹 OBSŁUGA WSPÓLNEJ FUNKCJI activateTool
-function activateTool(name) {
-    toolMode = name;
+// function activateTool(name) {
+//     toolMode = name;
 
-    document.querySelectorAll(".toolBtn").forEach(btn => btn.classList.remove("active"));
-    if (name === "brush") brushBtn.classList.add("active");
+//     document.querySelectorAll(".toolBtn").forEach(btn => btn.classList.remove("active"));
+//     if (name === "brush") brushBtn.classList.add("active");
 
-    // widoczność paneli
-    eraserSettings.style.display = name === "eraser" ? "block" : "none";
-    brushSettings.style.display = name === "brush" ? "block" : "none";
+//     // widoczność paneli
+//     eraserSettings.style.display = name === "eraser" ? "block" : "none";
+//     brushSettings.style.display = name === "brush" ? "block" : "none";
 
-    // kursor
-    if (name === "brush") {
-        canvas.style.cursor = "none";
-        brushCursor.style.display = "block";
-    } else {
-        brushCursor.style.display = "none";
-    }
-}
+//     // kursor
+//     if (name === "brush") {
+//         canvas.style.cursor = "none";
+//         brushCursor.style.display = "block";
+//     } else {
+//         brushCursor.style.display = "none";
+//     }
+// }
 
 // 🔹 RUCH MYSZY
 canvas.addEventListener("mousemove", e => {
@@ -190,3 +191,6 @@ function processBrushQueue() {
 
     requestAnimationFrame(processBrushQueue);
 }
+
+
+

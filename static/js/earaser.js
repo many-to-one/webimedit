@@ -1,4 +1,4 @@
-let toolMode = 'paint';
+// let toolMode = 'paint';
 let isErasing = false;
 let eraserRadius = 80;
 let eraserPower = 1.0;
@@ -35,25 +35,56 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// 🔹 Funkcja aktywująca narzędzie
-function activateTool(name) {
-  toolMode = name;
+// 🔹 GLOBALNA Funkcja aktywująca narzędzie
+// window.activateTool = function(name) {
+//   toolMode = name;
 
-  document.querySelectorAll('.toolBtn').forEach(btn => btn.classList.remove('active'));
+//   document.querySelectorAll('.toolBtn').forEach(btn => btn.classList.remove('active'));
 
-  if (name === 'eraser') eraserBtn.classList.add('active');
-  if (name === 'brush') brushBtn.classList.add('active');
-  if (name === 'move') moveBtn.classList.add('active');
-  if (name === 'zoom') zoomBtn.classList.add('active');
+//   if (name === 'eraser') eraserBtn.classList.add('active');
+//   if (name === 'brush') brushBtn.classList.add('active');
+//   if (name === 'move') moveBtn.classList.add('active');
+//   if (name === 'zoom') zoomBtn.classList.add('active');
 
-  // if (name === 'brush') {
-  //   brushSettings.style.display = 'block';
-  //   eraserSettings.style.display = 'none';
-  // }
+//   // if (name === 'brush') {
+//   //   brushSettings.style.display = 'block';
+//   //   eraserSettings.style.display = 'none';
+//   // }
 
-  eraserSettings.style.display = name === 'eraser' ? 'block' : 'none';
-  canvas.style.cursor = name === 'eraser' ? 'crosshair' : 'default';
-}
+//   eraserSettings.style.display = name === 'eraser' ? 'block' : 'none';
+//   canvas.style.cursor = name === 'eraser' ? 'crosshair' : 'default';
+// }
+
+window.activateTool = function(name) {
+    toolMode = name;
+
+    document.querySelectorAll(".toolBtn").forEach(btn => btn.classList.remove("active"));
+
+    if (name === "eraser") eraserBtn.classList.add("active");
+    if (name === "brush")  brushBtn.classList.add("active");
+
+    eraserSettings.style.display = name === "eraser" ? "block" : "none";
+    brushSettings.style.display  = name === "brush"  ? "block" : "none";
+
+    if (name === "eraser") {
+        canvas.style.cursor = "none";
+        eraserCursor.style.display = "block";
+        brushCursor.style.display = "none";
+    }
+
+    if (name === "brush") {
+        canvas.style.cursor = "none";
+        brushCursor.style.display = "block";
+        eraserCursor.style.display = "none";
+    }
+
+    if (name !== "brush" && name !== "eraser") {
+        canvas.style.cursor = "default";
+        brushCursor.style.display = "none";
+        eraserCursor.style.display = "none";
+    }
+};
+
 
 // 🔹 Kliknięcia narzędzi
 eraserBtn.onclick = () => activateTool('eraser');
@@ -197,4 +228,5 @@ function eraseAt(x, y) {
   pendingEraserPoints.push({ x, y });
   if (!isRendering) requestAnimationFrame(processEraserQueue);
 }
+
 
