@@ -4,8 +4,9 @@
 <meta charset="utf-8" />
 <title>Lightroom-style Editor — WebGL + HTML controls</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<link rel="stylesheet" href="/static/css/layers.css">
 <link rel="stylesheet" href="/static/css/main.css">
+<link rel="stylesheet" href="/static/css/layers.css">
+<link rel="stylesheet" href="/static/css/fill.css">
 <link rel="stylesheet" href="/static/css/toolpanel.css">
 
 </head>
@@ -32,6 +33,10 @@
             <img src="static/icons/brush.svg" alt="brush">
         </button>
 
+        <button class="toolBtn" id="tool-fill" title="Fill">
+          <img src="static/icons/fill.svg" alt="fill">
+      </button>
+
         <button class="toolBtn" id="tool-move" title="Move">
             <img src="icons/move.svg" alt="move">
         </button>
@@ -55,22 +60,39 @@
 
             <!-- BRUSH -->
              <div id="brushSettings" class="settingsGroup" style="display:none">
-            <label>Brush Color</label>
-            <input type="color" id="brushColor" value="#000000">
+              <label>Brush Color</label>
+              <input type="color" id="brushColor" value="#000000">
 
-            <label>Brush Radius</label>
-            <input type="range" id="brushRadius" min="5" max="150" value="40">
+              <label>Brush Radius</label>
+              <input type="range" id="brushRadius" min="5" max="150" value="40">
 
-            <label>Brush Shape</label>
-            <select id="brushShape">
-                <option value="circle">Circle</option>
-                <option value="square">Square</option>
-                <option value="custom">Custom (load)</option>
-            </select>
+              <label>Brush Shape</label>
+              <select id="brushShape">
+                  <option value="circle">Circle</option>
+                  <option value="square">Square</option>
+                  <option value="custom">Custom (load)</option>
+              </select>
 
-            <input type="file" id="customBrushInput" accept=".png,.jpg,.jpeg,.webp,.gif,.bmp,.abr">
+              <input type="file" id="customBrushInput" accept=".png,.jpg,.jpeg,.webp,.gif,.bmp,.abr">
 
             </div>
+
+            <div id="fillSettings" class="settingsGroup" style="display:none">
+              <label>Fill Color</label>
+              <input type="color" id="fillColor" value="#ffffff">
+
+              <label>Fill Mode</label>
+              <select id="fillMode">
+                  <option value="normal">Normal</option>
+                  <option value="multiply">Multiply</option>
+                  <option value="screen">Screen</option>
+                  <option value="overlay">Overlay</option>
+                  <option value="darken">Darken</option>
+                  <option value="lighten">Lighten</option>
+              </select>
+
+              <button id="applyFillBtn">Apply Fill</button>
+          </div>
 
         </div>
 

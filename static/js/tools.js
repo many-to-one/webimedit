@@ -45,6 +45,17 @@ const customBrushInput = document.getElementById("customBrushInput");
 const radiusSlider = document.getElementById("radiusSlider");
 const powerSlider  = document.getElementById("powerSlider");
 
+// FILL INPUTS
+const fillBtn = document.getElementById("tool-fill");
+const fillSettings = document.getElementById("fillSettings");
+const fillColorInput = document.getElementById("fillColor");
+const fillModeInput = document.getElementById("fillMode");
+const applyFillBtn = document.getElementById("applyFillBtn");
+
+let fillColor = "#ffffff";
+let fillMode = "normal";
+
+
 // =========================
 // KURSORY
 // =========================
@@ -81,11 +92,13 @@ window.activateTool = function(name) {
     document.querySelectorAll(".toolBtn").forEach(btn => btn.classList.remove("active"));
     if (name === "eraser") eraserBtn.classList.add("active");
     if (name === "brush")  brushBtn.classList.add("active");
+    if (name === "fill") fillBtn.classList.add("active");
     if (name === "move")   moveBtn.classList.add("active");
     if (name === "zoom")   zoomBtn.classList.add("active");
 
     eraserSettings.style.display = name === "eraser" ? "block" : "none";
     brushSettings.style.display  = name === "brush"  ? "block" : "none";
+    fillSettings.style.display = name === "fill" ? "block" : "none";
 
     if (name === "eraser") {
         canvas.style.cursor = "none";
@@ -105,6 +118,7 @@ window.activateTool = function(name) {
 // kliknięcia narzędzi
 eraserBtn.onclick = () => activateTool("eraser");
 brushBtn.onclick  = () => activateTool("brush");
+fillBtn.onclick = () => activateTool("fill");
 moveBtn.onclick   = () => activateTool("move");
 zoomBtn.onclick   = () => activateTool("zoom");
 
@@ -170,6 +184,92 @@ customBrushInput.onchange = async e => {
 
     customBrushImage = image;
 };
+
+
+// =========================
+//     FILL 
+// =========================
+fillColorInput.oninput = e => fillColor = e.target.value;
+fillModeInput.onchange = e => fillMode = e.target.value;
+
+applyFillBtn.onclick = () => {
+    const image = images[currentImageIndex];
+    const layer = image.layers[image.activeLayer];
+
+    if (!layer.canvas) {
+        const c = document.createElement("canvas");
+        c.width = image.bmp.width;
+        c.height = image.bmp.height;
+        const ctx = c.getContext("2d");
+        ctx.drawImage(image.bmp, 0, 0);
+        layer.canvas = c;
+
+        layer.tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, layer.tex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    }
+
+    const ctx = layer.canvas.getContext("2d");
+    ctx.globalCompositeOperation = fillMode;
+    ctx.fillStyle = fillColor;
+    ctx.fillRect(0, 0, layer.canvas.width, layer.canvas.height);
+
+    gl.bindTexture(gl.TEXTURE_2D, layer.tex);
+    gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        layer.canvas
+    );
+
+    draw();
+};
+
+function applyFill() {
+    const image = images[currentImageIndex];
+    const layer = image.layers[image.activeLayer];
+
+    // jeśli warstwa nie ma canvasu, tworzymy go
+    if (!layer.canvas) {
+        const c = document.createElement("canvas");
+        c.width = image.bmp.width;
+        c.height = image.bmp.height;
+        const ctx = c.getContext("2d");
+        ctx.drawImage(image.bmp, 0, 0);
+        layer.canvas = c;
+
+        layer.tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, layer.tex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    }
+
+    const ctx = layer.canvas.getContext("2d");
+    ctx.globalCompositeOperation = fillMode;
+    ctx.fillStyle = fillColor;
+    ctx.fillRect(0, 0, layer.canvas.width, layer.canvas.height);
+
+    // aktualizacja tekstury WebGL
+    gl.bindTexture(gl.TEXTURE_2D, layer.tex);
+    gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        layer.canvas
+    );
+
+    draw();
+}
+
 
 
 // =========================
@@ -241,6 +341,11 @@ canvas.addEventListener("mousemove", (e) => {
 canvas.addEventListener("mousedown", (e) => {
     const rect = canvas.getBoundingClientRect();
 
+    if (toolMode === "fill") {
+        applyFill();
+        return;
+    }
+
     if (toolMode === "eraser") {
         isErasing = true;
         pendingEraserPoints.push({
@@ -258,6 +363,7 @@ canvas.addEventListener("mousedown", (e) => {
         });
         if (!isBrushRendering) requestAnimationFrame(processBrushQueue);
     }
+
 });
 
 canvas.addEventListener("mouseup", () => {

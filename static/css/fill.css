@@ -1,0 +1,9 @@
+#fillSettings label {
+    margin-top: 8px;
+    display: block;
+}
+#fillSettings select,
+#fillSettings input[type=color] {
+    width: 100%;
+    margin-bottom: 8px;
+}
