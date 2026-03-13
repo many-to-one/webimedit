@@ -7,6 +7,9 @@ const images = [];
 let currentImageIndex = null;
 let copiedSettings = null;
 
+// Used to assign stable IDs to layers (used by layer UI actions)
+window.layerIdCounter = window.layerIdCounter || 0;
+
 
 const defaultBasicValues = {
   temp: 0.0, tint: 0.0,
@@ -89,6 +92,7 @@ fileInput.addEventListener('change', async () => {
         bmp,
         layers: [
           {
+            id: ++window.layerIdCounter,
             name: 'Base',
             visible: true, 
             settings: {

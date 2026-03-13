@@ -88,6 +88,14 @@ const layerPanel = document.getElementById('layerPanel');
 
 
 
+function ensureLayerId(layer) {
+  if (!layer.id) {
+    window.layerIdCounter = (window.layerIdCounter || 0) + 1;
+    layer.id = window.layerIdCounter;
+  }
+  return layer.id;
+}
+
 function createEmptyLayer(name, width, height, sourceImage = null) {
   // główny canvas warstwy
   const canvas = document.createElement("canvas");
@@ -123,7 +131,7 @@ function createEmptyLayer(name, width, height, sourceImage = null) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, maskCanvas);
 
-  return {
+  const layer = {
     name,
     visible: true,
 
@@ -168,6 +176,9 @@ function createEmptyLayer(name, width, height, sourceImage = null) {
       }))
     }
   };
+
+  ensureLayerId(layer);
+  return layer;
 }
 
 
@@ -268,7 +279,13 @@ function updateLayerUI() {
 
     del.onclick = (e) => {
       e.stopPropagation();
-      image.layers.splice(i, 1);
+
+      // Ensure we delete the correct layer even if layers were reordered
+      const layerId = layer.id;
+      const layerIndex = image.layers.findIndex(l => l.id === layerId);
+      if (layerIndex === -1) return;
+
+      image.layers.splice(layerIndex, 1);
 
       // Jeśli nie ma już żadnych warstw → usuń cały obraz z galerii i z tablicy
       if (image.layers.length === 0) {
@@ -291,6 +308,9 @@ function updateLayerUI() {
 
       if (image.activeLayer >= image.layers.length) {
         image.activeLayer = image.layers.length - 1;
+      }
+      if (image.activeLayer < 0) {
+        image.activeLayer = 0;
       }
 
       updateLayerUI();

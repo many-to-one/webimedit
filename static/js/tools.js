@@ -332,6 +332,7 @@ importLayerInput.onchange = e => {
         activeTransformLayer = newLayer;
         activateTool("transform");
 
+        updateLayerUI();
         draw();
     };
 
