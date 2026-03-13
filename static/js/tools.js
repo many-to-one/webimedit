@@ -21,6 +21,19 @@ let customBrushImage = null;
 let pendingBrushPoints = [];
 let isBrushRendering = false;
 
+// TRANSFORM
+const importBtn = document.getElementById("tool-import");
+const importLayerInput = document.getElementById("importLayerInput");
+
+const transformSettings = document.getElementById("transformSettings");
+const layerScaleInput = document.getElementById("layerScale");
+const layerRotationInput = document.getElementById("layerRotation");
+const layerPosXInput = document.getElementById("layerPosX");
+const layerPosYInput = document.getElementById("layerPosY");
+
+let activeTransformLayer = null;
+
+
 // =========================
 // ELEMENTY UI
 // =========================
@@ -104,6 +117,8 @@ window.activateTool = function(name) {
         canvas.style.cursor = "none";
         eraserCursor.style.display = "block";
         brushCursor.style.display = "none";
+    } else if (name === "transform") {
+        transformSettings.style.display = "block";
     } else if (name === "brush") {
         canvas.style.cursor = "none";
         brushCursor.style.display = "block";
@@ -112,10 +127,12 @@ window.activateTool = function(name) {
         canvas.style.cursor = "default";
         eraserCursor.style.display = "none";
         brushCursor.style.display = "none";
+        transformSettings.style.display = "none";
     }
 };
 
 // kliknięcia narzędzi
+importBtn.onclick = () => importLayerInput.click();
 eraserBtn.onclick = () => activateTool("eraser");
 brushBtn.onclick  = () => activateTool("brush");
 fillBtn.onclick = () => activateTool("fill");
@@ -269,6 +286,83 @@ function applyFill() {
 
     draw();
 }
+
+
+// =========================
+// TRANSFORM
+// =========================
+
+// Import obrazu jako nowej warstwy
+importLayerInput.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const img = new Image();
+    img.onload = () => {
+        const image = images[currentImageIndex];
+
+        const newLayer = createEmptyLayer(
+            `Imported ${file.name}`,
+            img.width,
+            img.height,
+            img
+        );
+
+        // tworzymy canvas warstwy
+        const c = document.createElement("canvas");
+        c.width = img.width;
+        c.height = img.height;
+        const ctx = c.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        // newLayer.canvas = c;
+
+        // tekstura WebGL
+        // newLayer.tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, newLayer.tex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+
+        // image.layers.push(newLayer);
+        image.layers.unshift(newLayer);
+        image.activeLayer = 0;
+
+        activeTransformLayer = newLayer;
+        activateTool("transform");
+
+        draw();
+    };
+
+    img.src = URL.createObjectURL(file);
+};
+
+
+// Obsługa suwaków transformacji
+layerScaleInput.oninput = e => {
+    if (!activeTransformLayer) return;
+    activeTransformLayer.transform.scale = parseFloat(e.target.value);
+    draw();
+};
+
+layerRotationInput.oninput = e => {
+    if (!activeTransformLayer) return;
+    activeTransformLayer.transform.rotation = parseFloat(e.target.value);
+    draw();
+};
+
+layerPosXInput.oninput = e => {
+    if (!activeTransformLayer) return;
+    activeTransformLayer.transform.x = parseFloat(e.target.value);
+    draw();
+};
+
+layerPosYInput.oninput = e => {
+    if (!activeTransformLayer) return;
+    activeTransformLayer.transform.y = parseFloat(e.target.value);
+    draw();
+};
 
 
 

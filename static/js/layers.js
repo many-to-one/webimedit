@@ -6,6 +6,171 @@ const layerStatus = document.getElementById('layerStatus');
 const layerPanel = document.getElementById('layerPanel');
 
 
+// function createEmptyLayer(name, width, height, sourceImage = null) {
+//   const canvas = document.createElement("canvas");
+//   canvas.width = width;
+//   canvas.height = height;
+
+//   const ctx = canvas.getContext("2d");
+//   if (sourceImage) ctx.drawImage(sourceImage, 0, 0);
+
+//   const tex = gl.createTexture();
+//   // gl.bindTexture(gl.TEXTURE_2D, tex);
+//   // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+//   // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+//   // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+//   // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+//   // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+
+//   const maskCanvas = document.createElement("canvas");
+//   maskCanvas.width = width;
+//   maskCanvas.height = height;
+//   const maskCtx = maskCanvas.getContext("2d");
+//   maskCtx.fillStyle = "rgba(255,255,255,1)";
+//   maskCtx.fillRect(0, 0, width, height);
+
+//   const maskTex = gl.createTexture();
+//   gl.bindTexture(gl.TEXTURE_2D, maskTex);
+//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+//   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, maskCanvas);
+
+
+//   return {
+//     name,
+//     visible: true,
+//     canvas,
+//     tex,
+//     mask: maskCanvas,
+//     maskTex: maskTex,
+
+
+//     transform: {
+//       x: 0,
+//       y: 0,
+//       scale: 1,
+//       rotation: 0
+//     },
+
+//     settings: {
+//       basic: {
+//         exposure: 0,
+//         contrast: 0,
+//         highlights: 0,
+//         shadows: 0,
+//         whites: 0,
+//         blacks: 0,
+//         clarity: 0,
+//         texture: 0,
+//         dehaze: 0
+//       },
+
+//       calibration: {
+//         redHue: 0,
+//         redSat: 0,
+//         greenHue: 0,
+//         greenSat: 0,
+//         blueHue: 0,
+//         blueSat: 0
+//       },
+
+//       hsl: Array(8).fill().map(() => ({
+//         hue: 0,
+//         sat: 1,
+//         lig: 1
+//       }))
+//     }
+
+//   };
+// }
+
+
+
+function createEmptyLayer(name, width, height, sourceImage = null) {
+  // główny canvas warstwy
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  if (sourceImage) ctx.drawImage(sourceImage, 0, 0);
+
+  // tekstura obrazu
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+
+  // 🔥 MASKA — każda warstwa musi ją mieć
+  const maskCanvas = document.createElement("canvas");
+  maskCanvas.width = width;
+  maskCanvas.height = height;
+
+  const maskCtx = maskCanvas.getContext("2d");
+  maskCtx.fillStyle = "rgba(255,255,255,1)"; // pełna widoczność
+  maskCtx.fillRect(0, 0, width, height);
+
+  const maskTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, maskTex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, maskCanvas);
+
+  return {
+    name,
+    visible: true,
+
+    canvas,
+    tex,
+
+    // 🔥 to jest to, o co pytałeś:
+    mask: maskCanvas,
+    maskTex: maskTex,
+
+    transform: {
+      x: 0,
+      y: 0,
+      scale: 1,
+      rotation: 0
+    },
+
+    settings: {
+      basic: {
+        exposure: 0,
+        contrast: 0,
+        highlights: 0,
+        shadows: 0,
+        whites: 0,
+        blacks: 0,
+        clarity: 0,
+        texture: 0,
+        dehaze: 0
+      },
+      calibration: {
+        redHue: 0,
+        redSat: 0,
+        greenHue: 0,
+        greenSat: 0,
+        blueHue: 0,
+        blueSat: 0
+      },
+      hsl: Array(8).fill().map(() => ({
+        hue: 0,
+        sat: 1,
+        lig: 1
+      }))
+    }
+  };
+}
+
+
 function addLayer(name = `Layer ${images[currentImageIndex].layers.length + 1}`) {
   const image = images[currentImageIndex];
 
@@ -17,16 +182,20 @@ function addLayer(name = `Layer ${images[currentImageIndex].layers.length + 1}`)
     hsl: Array(8).fill().map(() => ({ hue: 0, sat: 1, lig: 1 }))
   };
 
-  image.layers.unshift({
-    name,
-    visible: true,
-    settings: {
-      basic: { ...sourceSettings.basic },
-      calibration: { ...sourceSettings.calibration },
-      hsl: sourceSettings.hsl.map(h => ({ ...h }))
-    },
-    mask: null,
-  });
+  // image.layers.unshift({
+  //   name,
+  //   visible: true,
+  //   settings: {
+  //     basic: { ...sourceSettings.basic },
+  //     calibration: { ...sourceSettings.calibration },
+  //     hsl: sourceSettings.hsl.map(h => ({ ...h }))
+  //   },
+  //   mask: null,
+  // });
+  image.layers.unshift(
+    createEmptyLayer(name, image.bmp.width, image.bmp.height)
+  );
+
 
   image.activeLayer = 0; // newest layer becomes active
   updateLayerUI();       // re-render layer stack
@@ -60,7 +229,12 @@ function updateLayerUI() {
     canvas.width = 40;
     canvas.height = 30;
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(image.bmp, 0, 0, canvas.width, canvas.height);
+
+    // ctx.drawImage(image.bmp, 0, 0, canvas.width, canvas.height);
+
+    const source = layer.canvas || image.bmp;
+    ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+
     canvas.toBlob(blob => {
       thumb.src = URL.createObjectURL(blob);
     }, 'image/png');
@@ -92,63 +266,39 @@ function updateLayerUI() {
     const del = document.createElement('button');
     del.textContent = '🗑️';
 
-    // del.onclick = (e) => {
-    //   e.stopPropagation();
-    //   image.layers.splice(i, 1);
-
-    //   // Jeśli nie ma już żadnych warstw → usuń też główny obraz
-    //   if (image.layers.length === 0) {
-    //     image.bmp = null; // usuwamy bitmapę
-
-    //     gl.viewport(0, 0, canvas.width, canvas.height);
-    //     gl.clearColor(0, 0, 0, 0);
-    //     gl.clear(gl.COLOR_BUFFER_BIT);
-    //   }
-
-    //   if (image.activeLayer >= image.layers.length) {
-    //     image.activeLayer = image.layers.length - 1;
-    //   }
-
-    //   updateLayerUI();
-    //   if (image.layers[image.activeLayer]) {
-    //     restoreSliders(image.layers[image.activeLayer].settings);
-    //   }
-    //   draw();
-    // };
-
     del.onclick = (e) => {
-  e.stopPropagation();
-  image.layers.splice(i, 1);
+      e.stopPropagation();
+      image.layers.splice(i, 1);
 
-  // Jeśli nie ma już żadnych warstw → usuń cały obraz z galerii i z tablicy
-  if (image.layers.length === 0) {
-    const imgIndex = images.indexOf(image);
-    if (imgIndex !== -1) {
-      removeFromGallery(imgIndex);
-      images.splice(imgIndex, 1); // usuń z tablicy images
-    }
+      // Jeśli nie ma już żadnych warstw → usuń cały obraz z galerii i z tablicy
+      if (image.layers.length === 0) {
+        const imgIndex = images.indexOf(image);
+        if (imgIndex !== -1) {
+          removeFromGallery(imgIndex);
+          images.splice(imgIndex, 1); // usuń z tablicy images
+        }
 
-    // wyczyść canvas
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+        // wyczyść canvas
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
 
-    currentImageIndex = null;
-    updateLayerUI();
-    statusEl.textContent = "No image selected";
-    return; // zakończ, bo obraz został usunięty
-  }
+        currentImageIndex = null;
+        updateLayerUI();
+        statusEl.textContent = "No image selected";
+        return; // zakończ, bo obraz został usunięty
+      }
 
-  if (image.activeLayer >= image.layers.length) {
-    image.activeLayer = image.layers.length - 1;
-  }
+      if (image.activeLayer >= image.layers.length) {
+        image.activeLayer = image.layers.length - 1;
+      }
 
-  updateLayerUI();
-  if (image.layers[image.activeLayer]) {
-    restoreSliders(image.layers[image.activeLayer].settings);
-  }
-  draw();
-};
+      updateLayerUI();
+      if (image.layers[image.activeLayer]) {
+        restoreSliders(image.layers[image.activeLayer].settings);
+      }
+      draw();
+    };
 
 
 

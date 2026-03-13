@@ -25,6 +25,13 @@
       
       <!-- TOOLBOX (lewy panel jak w Photoshopie) -->
         <div id="toolPanel">
+
+        <button class="toolBtn" id="tool-import" title="Import Image">
+          <img src="static/icons/import.svg" alt="import">
+        </button>
+
+        <input type="file" id="importLayerInput" accept="image/*" style="display:none">
+
         <button class="toolBtn" id="tool-eraser" title="Eraser">
             <img src="static/icons/eraser.svg" alt="eraser">
         </button>
@@ -35,7 +42,7 @@
 
         <button class="toolBtn" id="tool-fill" title="Fill">
           <img src="static/icons/fill.svg" alt="fill">
-      </button>
+        </button>
 
         <button class="toolBtn" id="tool-move" title="Move">
             <img src="icons/move.svg" alt="move">
@@ -48,6 +55,21 @@
 
         <!-- PANEL USTAWIEŃ AKTYWNEGO NARZĘDZIA -->
         <div id="toolSettings">
+
+            <!-- TRANSFORMERS -->
+            <div id="transformSettings" class="settingsGroup" style="display:none">
+              <label>Scale</label>
+              <input type="range" id="layerScale" min="0.1" max="5" step="0.01" value="1">
+
+              <label>Rotation</label>
+              <input type="range" id="layerRotation" min="-180" max="180" step="1" value="0">
+
+              <label>Position X</label>
+              <input type="range" id="layerPosX" min="-1000" max="1000" step="1" value="0">
+
+              <label>Position Y</label>
+              <input type="range" id="layerPosY" min="-1000" max="1000" step="1" value="0">
+          </div>
 
             <!-- ERASER -->
             <div id="eraserSettings" class="settingsGroup" style="display:none">
@@ -292,11 +314,12 @@
 
 <script src="/static/js/basic.js"></script>
 <script src="/static/js/layers.js"></script>
-<script src="/static/js/shader.js"></script>
+<script src="/static/js/shader_new.js"></script>
 <script src="/static/js/uniforms.js"></script>
 <script src="/static/js/texture.js"></script>
 <script src="/static/js/draw.js"></script>
 <script src="/static/js/tools.js"></script>
+<script src="/static/js/transform.js"></script>
 
 <script src="/static/js/zoom.js"></script>
 <script src="/static/js/ui_helpers.js"></script>
