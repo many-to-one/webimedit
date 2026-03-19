@@ -9,6 +9,8 @@ window.canvas = document.getElementById("canvas");
 window.images = window.images || [];
 window.currentImageIndex = window.currentImageIndex || 0;
 
+window.allSettingsPanels = document.querySelectorAll(".settingsGroup");
+
 
 // ===============================
 // UI ELEMENTS

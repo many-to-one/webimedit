@@ -197,9 +197,44 @@ function processEraserQueue() {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   }
 
+  // const rect = canvas.getBoundingClientRect();
+  // const scaleX = layer.mask.width / rect.width;
+  // const scaleY = layer.mask.height / rect.height;
+
   const rect = canvas.getBoundingClientRect();
-  const scaleX = layer.mask.width / rect.width;
-  const scaleY = layer.mask.height / rect.height;
+
+  // screen → normalized
+  let x = p.x / rect.width;
+  let y = p.y / rect.height;
+
+  // normalized → image space
+  x *= layer.mask.width;
+  y *= layer.mask.height;
+
+  // 🔥 UWZGLĘDNIJ TRANSFORM
+  const t = layer.transform;
+
+  // translate
+  x -= t.x;
+  y -= t.y;
+
+  // scale
+  x /= t.scale;
+  y /= t.scale;
+
+  // (opcjonalnie rotation – jeśli używasz)
+  if (t.rotation !== 0) {
+      const rad = -t.rotation * Math.PI / 180;
+
+      const cx = layer.mask.width / 2;
+      const cy = layer.mask.height / 2;
+
+      const dx = x - cx;
+      const dy = y - cy;
+
+      x = cx + (dx * Math.cos(rad) - dy * Math.sin(rad));
+      y = cy + (dx * Math.sin(rad) + dy * Math.cos(rad));
+  }
 
   const ctx = layer.mask.getContext('2d');
   ctx.globalCompositeOperation = 'destination-out';

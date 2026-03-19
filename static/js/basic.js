@@ -2,6 +2,8 @@ var canvas = document.getElementById('glcanvas');
 
 const galleryEl = document.getElementById('gallery');
 
+window.allSettingsPanels = document.querySelectorAll(".settingsGroup");
+
 // Store image metadata
 const images = [];
 let currentImageIndex = null;

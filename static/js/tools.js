@@ -99,35 +99,45 @@ document.body.appendChild(brushCursor);
 // =========================
 // AKTYWACJA NARZĘDZI
 // =========================
+
 window.activateTool = function(name) {
+
     toolMode = name;
 
-    document.querySelectorAll(".toolBtn").forEach(btn => btn.classList.remove("active"));
+    // reset active btn
+    document.querySelectorAll(".toolBtn")
+        .forEach(btn => btn.classList.remove("active"));
+
     if (name === "eraser") eraserBtn.classList.add("active");
     if (name === "brush")  brushBtn.classList.add("active");
-    if (name === "fill") fillBtn.classList.add("active");
     if (name === "move")   moveBtn.classList.add("active");
     if (name === "zoom")   zoomBtn.classList.add("active");
 
-    eraserSettings.style.display = name === "eraser" ? "block" : "none";
-    brushSettings.style.display  = name === "brush"  ? "block" : "none";
-    fillSettings.style.display = name === "fill" ? "block" : "none";
+    // 🔥 KLUCZOWE: ukryj WSZYSTKIE panele
+    allSettingsPanels.forEach(p => p.style.display = "none");
 
-    if (name === "eraser") {
-        canvas.style.cursor = "none";
-        eraserCursor.style.display = "block";
-        brushCursor.style.display = "none";
-    } else if (name === "transform") {
-        transformSettings.style.display = "block";
-    } else if (name === "brush") {
+    // 🔥 pokaż tylko właściwy
+    if (name === "eraser") eraserSettings.style.display = "block";
+    if (name === "brush")  brushSettings.style.display  = "block";
+    if (name === "transform") transformSettings.style.display = "block";
+
+    // kursory
+    if (name === "brush") {
         canvas.style.cursor = "none";
         brushCursor.style.display = "block";
         eraserCursor.style.display = "none";
-    } else {
-        canvas.style.cursor = "default";
-        eraserCursor.style.display = "none";
+    }
+
+    else if (name === "eraser") {
+        canvas.style.cursor = "none";
+        eraserCursor.style.display = "block";
         brushCursor.style.display = "none";
-        transformSettings.style.display = "none";
+    }
+
+    else {
+        canvas.style.cursor = "default";
+        brushCursor.style.display = "none";
+        eraserCursor.style.display = "none";
     }
 };
 
@@ -136,7 +146,7 @@ importBtn.onclick = () => importLayerInput.click();
 eraserBtn.onclick = () => activateTool("eraser");
 brushBtn.onclick  = () => activateTool("brush");
 fillBtn.onclick = () => activateTool("fill");
-moveBtn.onclick   = () => activateTool("move");
+moveBtn.onclick   = () => activateTool("transform");
 zoomBtn.onclick   = () => activateTool("zoom");
 
 // klik poza panelami = powrót do paint
@@ -313,11 +323,12 @@ importLayerInput.onchange = e => {
         c.width = img.width;
         c.height = img.height;
         const ctx = c.getContext("2d");
+        // const ctx = c.getContext("2d", { alpha: true });
         ctx.drawImage(img, 0, 0);
         // newLayer.canvas = c;
 
         // tekstura WebGL
-        // newLayer.tex = gl.createTexture();
+        newLayer.tex = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, newLayer.tex);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -330,7 +341,6 @@ importLayerInput.onchange = e => {
         image.activeLayer = 0;
 
         activeTransformLayer = newLayer;
-        activateTool("transform");
 
         updateLayerUI();
         draw();
@@ -382,12 +392,12 @@ canvas.addEventListener("mousemove", (e) => {
         const layer = image.layers[image.activeLayer];
         const baseW = layer.mask ? layer.mask.width : image.bmp.width;
         const baseH = layer.mask ? layer.mask.height : image.bmp.height;
-        const scaleX = baseW / rect.width;
-        const scaleY = baseH / rect.height;
-        const scale = (scaleX + scaleY) / 2;
+        const scaleX = canvas.width / rect.width;
+        const screenRadius = eraserRadius * layer.transform.scale * scaleX;
+
         eraserCursor.style.display = "block";
-        eraserCursor.style.width  = `${(eraserRadius / scale) * 2}px`;
-        eraserCursor.style.height = `${(eraserRadius / scale) * 2}px`;
+        eraserCursor.style.width  = `${screenRadius}px`;
+        eraserCursor.style.height = `${screenRadius}px`;
     } else {
         eraserCursor.style.display = "none";
     }
@@ -401,12 +411,11 @@ canvas.addEventListener("mousemove", (e) => {
         const layer = image.layers[image.activeLayer];
         const baseW = layer.canvas ? layer.canvas.width : image.bmp.width;
         const baseH = layer.canvas ? layer.canvas.height : image.bmp.height;
-        const scaleX = baseW / rect.width;
-        const scaleY = baseH / rect.height;
-        const scale = (scaleX + scaleY) / 2;
+        const scaleX = canvas.width / rect.width;
+        const screenRadius = brushRadius * layer.transform.scale * scaleX;
         brushCursor.style.display = "block";
-        brushCursor.style.width  = `${(brushRadius / scale) * 2}px`;
-        brushCursor.style.height = `${(brushRadius / scale) * 2}px`;
+        brushCursor.style.width  = `${screenRadius}px`;
+        brushCursor.style.height = `${(screenRadius)}px`;
     } else {
         brushCursor.style.display = "none";
     }
@@ -498,15 +507,17 @@ function processEraserQueue() {
     }
 
     const rect = canvas.getBoundingClientRect();
-    const scaleX = layer.mask.width / rect.width;
-    const scaleY = layer.mask.height / rect.height;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
 
     const ctx = layer.mask.getContext("2d");
     ctx.globalCompositeOperation = "destination-out";
 
     for (const p of pendingEraserPoints) {
-        const normX = p.x * scaleX;
-        const normY = p.y * scaleY;
+
+        const t = layer.transform;
+        const normX = ((p.x * scaleX) - t.x) / t.scale;
+        const normY = ((p.y * scaleY) - t.y) / t.scale;
 
         const grad = ctx.createRadialGradient(normX, normY, 0, normX, normY, eraserRadius);
         grad.addColorStop(0, `rgba(0,0,0,${eraserPower})`);
@@ -542,6 +553,7 @@ function processBrushQueue() {
         c.width = image.bmp.width;
         c.height = image.bmp.height;
         const ctx = c.getContext("2d");
+        // const ctx = c.getContext("2d", { alpha: true });
         ctx.drawImage(image.bmp, 0, 0);
         layer.canvas = c;
 
@@ -551,19 +563,23 @@ function processBrushQueue() {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false); // 🔥 ważne
     }
 
     const rect = canvas.getBoundingClientRect();
-    const scaleX = layer.canvas.width / rect.width;
-    const scaleY = layer.canvas.height / rect.height;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
 
     const ctx = layer.canvas.getContext("2d");
     ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = brushColor;
 
     for (const p of pendingBrushPoints) {
-        const x = p.x * scaleX;
-        const y = p.y * scaleY;
+
+        const t = layer.transform;
+        const x = ((p.x * scaleX) - t.x) / t.scale;
+        const y = ((p.y * scaleY) - t.y) / t.scale;
 
         if (brushShape === "circle") {
             ctx.beginPath();
