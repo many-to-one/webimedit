@@ -193,16 +193,6 @@ function addLayer(name = `Layer ${images[currentImageIndex].layers.length + 1}`)
     hsl: Array(8).fill().map(() => ({ hue: 0, sat: 1, lig: 1 }))
   };
 
-  // image.layers.unshift({
-  //   name,
-  //   visible: true,
-  //   settings: {
-  //     basic: { ...sourceSettings.basic },
-  //     calibration: { ...sourceSettings.calibration },
-  //     hsl: sourceSettings.hsl.map(h => ({ ...h }))
-  //   },
-  //   mask: null,
-  // });
   image.layers.unshift(
     createEmptyLayer(name, image.bmp.width, image.bmp.height)
   );
@@ -280,32 +270,40 @@ function updateLayerUI() {
     del.onclick = (e) => {
       e.stopPropagation();
 
-      // Ensure we delete the correct layer even if layers were reordered
-      const layerId = layer.id;
-      const layerIndex = image.layers.findIndex(l => l.id === layerId);
-      if (layerIndex === -1) return;
+      // usuń warstwę po indeksie i
+      const layerToDelete = image.layers[i];
 
-      image.layers.splice(layerIndex, 1);
+      if (layerToDelete.tex) {
+        gl.deleteTexture(layerToDelete.tex);
+      }
+      if (layerToDelete.maskTex) {
+        gl.deleteTexture(layerToDelete.maskTex);
+      }
 
-      // Jeśli nie ma już żadnych warstw → usuń cały obraz z galerii i z tablicy
+      image.layers.splice(i, 1);
+
       if (image.layers.length === 0) {
         const imgIndex = images.indexOf(image);
         if (imgIndex !== -1) {
           removeFromGallery(imgIndex);
-          images.splice(imgIndex, 1); // usuń z tablicy images
+          images.splice(imgIndex, 1);
         }
 
-        // wyczyść canvas
         gl.viewport(0, 0, canvas.width, canvas.height);
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.bindTexture(gl.TEXTURE_2D, null);
 
         currentImageIndex = null;
         updateLayerUI();
         statusEl.textContent = "No image selected";
-        return; // zakończ, bo obraz został usunięty
+        return;
       }
 
+      // korekta activeLayer
+      if (i < image.activeLayer) {
+        image.activeLayer--;
+      }
       if (image.activeLayer >= image.layers.length) {
         image.activeLayer = image.layers.length - 1;
       }
@@ -314,10 +312,19 @@ function updateLayerUI() {
       }
 
       updateLayerUI();
-      if (image.layers[image.activeLayer]) {
-        restoreSliders(image.layers[image.activeLayer].settings);
+
+      const active = image.layers[image.activeLayer];
+
+      if (active && active.settings && active.settings.basic) {
+        try {
+          restoreSliders(active.settings);
+        } catch (err) {
+          console.warn('restoreSliders error after delete:', err);
+        }
       }
+
       draw();
+
     };
 
 

@@ -18,9 +18,13 @@ function draw() {
   gl.useProgram(prog);
 
   // Draw layers from bottom → top
-  for (let i = visibleLayers.length - 1; i >= 0; i--) {
-  // for (let i = 0; i < visibleLayers.length; i++) {
-    const layer = visibleLayers[i];
+  // for (let i = visibleLayers.length - 1; i >= 0; i--) {
+  //   const layer = visibleLayers[i];
+  for (let i = image.layers.length - 1; i >= 0; i--) {
+    const layer = image.layers[i];
+
+    if (!layer.visible) continue;
+    
     const s = layer.settings;
 
     const t = layer.transform || { x: 0, y: 0, scale: 1, rotation: 0 };
