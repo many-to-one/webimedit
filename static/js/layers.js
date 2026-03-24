@@ -209,6 +209,9 @@ function addLayer(name = `Layer ${images[currentImageIndex].layers.length + 1}`)
 function switchLayer(index) {
   const image = images[currentImageIndex];
   image.activeLayer = index;
+
+  activeTransformLayer = image.layers[index];
+
   updateLayerUI();
   restoreSliders(image.layers[index].settings);
   draw();
@@ -322,6 +325,8 @@ function updateLayerUI() {
           console.warn('restoreSliders error after delete:', err);
         }
       }
+
+      activeTransformLayer = image.layers[image.activeLayer];
 
       draw();
 

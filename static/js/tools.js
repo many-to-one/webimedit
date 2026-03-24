@@ -245,6 +245,10 @@ applyFillBtn.onclick = () => {
     ctx.fillRect(0, 0, layer.canvas.width, layer.canvas.height);
 
     gl.bindTexture(gl.TEXTURE_2D, layer.tex);
+
+    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+
     gl.texImage2D(
         gl.TEXTURE_2D,
         0,
@@ -285,6 +289,9 @@ function applyFill() {
 
     // aktualizacja tekstury WebGL
     gl.bindTexture(gl.TEXTURE_2D, layer.tex);
+
+    setTextureDefaults(gl);
+
     gl.texImage2D(
         gl.TEXTURE_2D,
         0,
@@ -301,53 +308,111 @@ function applyFill() {
 // =========================
 // TRANSFORM
 // =========================
+// 🟣 Chcesz, żebym teraz: <- zrobić następne
+// dodał drag & drop reorder warstw
+
+// dodał Free Transform box (uchwyty)
+
+// dodał rotate/scale myszką
 
 // Import obrazu jako nowej warstwy
-importLayerInput.onchange = e => {
+// importLayerInput.onchange = e => {
+//     const file = e.target.files[0];
+//     if (!file) return;
+
+//     const img = new Image();
+//     img.crossOrigin = "anonymous";
+//     img.onload = () => {
+//         const image = images[currentImageIndex];
+
+//         const newLayer = createEmptyLayer(
+//             `Imported ${file.name}`,
+//             img.width,
+//             img.height,
+//             img
+//         );
+
+//         // nadpisujemy canvas warstwy poprawnym obrazem
+//         const c = document.createElement("canvas");
+//         c.width = img.width;
+//         c.height = img.height;
+//         const ctx = c.getContext("2d");
+//         // ctx.drawImage(img, 0, 0);
+//         ctx.imageSmoothingEnabled = false;
+//         ctx.drawImage(img, 0, 0);
+//         newLayer.canvas = c;
+
+//         // nadpisujemy teksturę warstwy poprawnym obrazem
+//         // gl.bindTexture(gl.TEXTURE_2D, newLayer.tex);
+//         // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+//         gl.bindTexture(gl.TEXTURE_2D, newLayer.tex);
+//         setTextureDefaults(gl);
+
+//         gl.texImage2D(
+//             gl.TEXTURE_2D,
+//             0,
+//             gl.RGBA,
+//             gl.RGBA,
+//             gl.UNSIGNED_BYTE,
+//             c
+//         );
+
+//         image.layers.unshift(newLayer);
+//         image.activeLayer = 0;
+
+//         updateLayerUI();
+//         draw();
+
+//         console.log("IMPORT TEX OK");
+
+//     };
+
+//     img.src = URL.createObjectURL(file);
+// };
+
+
+importLayerInput.onchange = async e => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const img = new Image();
-    img.onload = () => {
-        const image = images[currentImageIndex];
+    // 🔥 używamy createImageBitmap — tak jak przy basic layer
+    const bmp = await createImageBitmap(file, { premultiplyAlpha: 'default' });
 
-        const newLayer = createEmptyLayer(
-            `Imported ${file.name}`,
-            img.width,
-            img.height,
-            img
-        );
+    const image = images[currentImageIndex];
 
-        // tworzymy canvas warstwy
-        const c = document.createElement("canvas");
-        c.width = img.width;
-        c.height = img.height;
-        const ctx = c.getContext("2d");
-        // const ctx = c.getContext("2d", { alpha: true });
-        ctx.drawImage(img, 0, 0);
-        // newLayer.canvas = c;
+    const newLayer = createEmptyLayer(
+        `Imported ${file.name}`,
+        bmp.width,
+        bmp.height,
+        bmp,
+    );
 
-        // tekstura WebGL
-        newLayer.tex = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, newLayer.tex);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
 
-        // image.layers.push(newLayer);
-        image.layers.unshift(newLayer);
-        image.activeLayer = 0;
+    // nadpisujemy canvas warstwy poprawnym obrazem
+    const c = document.createElement("canvas");
+    c.width = bmp.width;
+    c.height = bmp.height;
+    const ctx = c.getContext("2d");
+    ctx.drawImage(bmp, 0, 0);
+    newLayer.canvas = c;
 
-        activeTransformLayer = newLayer;
+    image.layers.unshift(newLayer);
+    image.layers[0].settings = {
+              basic: { ...defaultBasicValues },
+              calibration: { ...defaultCalibrationValues },
+              hsl: Array(8).fill().map(() => ({ hue: 0, sat: 1, lig: 1 }))
+            }
+    image.activeLayer = 0;
+    activeTransformLayer = newLayer;
 
-        updateLayerUI();
-        draw();
-    };
-
-    img.src = URL.createObjectURL(file);
+    console.log("LAYER IMAGE", image)
+            
+    updateLayerUI();
+    draw();
 };
+
+
+
 
 
 // Obsługa suwaków transformacji
@@ -374,6 +439,15 @@ layerPosYInput.oninput = e => {
     activeTransformLayer.transform.y = parseFloat(e.target.value);
     draw();
 };
+
+
+
+// =========================
+function setTextureDefaults(gl) {
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+}
+// =========================
 
 
 
@@ -601,6 +675,8 @@ function processBrushQueue() {
     pendingBrushPoints = [];
 
     gl.bindTexture(gl.TEXTURE_2D, layer.tex);
+    setTextureDefaults(gl);
+
     gl.texImage2D(
         gl.TEXTURE_2D,
         0,

@@ -79,16 +79,7 @@ fileInput.addEventListener('change', async () => {
         statusEl.textContent = `Unsupported format: ${f.name}`;
         continue;
       }
-
-      // const image = {
-      //   name: f.name,
-      //   bmp,
-      //   settings: {
-      //     basic: { ...defaultBasicValues },
-      //     calibration: { ...defaultCalibrationValues },
-      //     hsl: Array(8).fill().map(() => ({ hue: 0, sat: 1, lig: 1 }))
-      //   }
-      // };
+      
       const image = {
         name: f.name,
         bmp,
@@ -162,25 +153,6 @@ function showHSL(color){
 
 
 // Add thumbnail to gallery
-// function addToGallery(index) {
-//   const bmp = images[index].bmp;
-//   const thumbCanvas = document.createElement('canvas');
-//   thumbCanvas.width = 80;
-//   thumbCanvas.height = 60;
-//   const ctx = thumbCanvas.getContext('2d');
-//   ctx.drawImage(bmp, 0, 0, thumbCanvas.width, thumbCanvas.height);
-//   thumbCanvas.toBlob(blob => {
-//     const img = document.createElement('img');
-//     img.width = 80;
-//     img.height = 60;
-//     img.style.cursor = 'pointer';
-//     img.style.border = '2px solid transparent';
-//     img.src = URL.createObjectURL(blob);
-//     img.onclick = () => selectImage(index);
-//     galleryEl.appendChild(img);
-//   }, 'image/png');
-// }
-
 function addToGallery(index) {
   const bmp = images[index].bmp;
   const thumbCanvas = document.createElement('canvas');
