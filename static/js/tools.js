@@ -110,6 +110,7 @@ window.activateTool = function(name) {
 
     if (name === "eraser") eraserBtn.classList.add("active");
     if (name === "brush")  brushBtn.classList.add("active");
+    if (name === "fill")   fillBtn.classList.add("active");
     if (name === "move")   moveBtn.classList.add("active");
     if (name === "zoom")   zoomBtn.classList.add("active");
 
@@ -187,13 +188,6 @@ brushShapeInput.onchange = e => {
     if (brushShape === "custom") customBrushInput.click();
 };
 
-// customBrushInput.onchange = e => {
-//     const file = e.target.files[0];
-//     if (!file) return;
-//     const img = new Image();
-//     img.onload = () => customBrushImage = img;
-//     img.src = URL.createObjectURL(file);
-// };
 customBrushInput.onchange = async e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -316,61 +310,6 @@ function applyFill() {
 // dodał rotate/scale myszką
 
 // Import obrazu jako nowej warstwy
-// importLayerInput.onchange = e => {
-//     const file = e.target.files[0];
-//     if (!file) return;
-
-//     const img = new Image();
-//     img.crossOrigin = "anonymous";
-//     img.onload = () => {
-//         const image = images[currentImageIndex];
-
-//         const newLayer = createEmptyLayer(
-//             `Imported ${file.name}`,
-//             img.width,
-//             img.height,
-//             img
-//         );
-
-//         // nadpisujemy canvas warstwy poprawnym obrazem
-//         const c = document.createElement("canvas");
-//         c.width = img.width;
-//         c.height = img.height;
-//         const ctx = c.getContext("2d");
-//         // ctx.drawImage(img, 0, 0);
-//         ctx.imageSmoothingEnabled = false;
-//         ctx.drawImage(img, 0, 0);
-//         newLayer.canvas = c;
-
-//         // nadpisujemy teksturę warstwy poprawnym obrazem
-//         // gl.bindTexture(gl.TEXTURE_2D, newLayer.tex);
-//         // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
-//         gl.bindTexture(gl.TEXTURE_2D, newLayer.tex);
-//         setTextureDefaults(gl);
-
-//         gl.texImage2D(
-//             gl.TEXTURE_2D,
-//             0,
-//             gl.RGBA,
-//             gl.RGBA,
-//             gl.UNSIGNED_BYTE,
-//             c
-//         );
-
-//         image.layers.unshift(newLayer);
-//         image.activeLayer = 0;
-
-//         updateLayerUI();
-//         draw();
-
-//         console.log("IMPORT TEX OK");
-
-//     };
-
-//     img.src = URL.createObjectURL(file);
-// };
-
-
 importLayerInput.onchange = async e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -412,13 +351,16 @@ importLayerInput.onchange = async e => {
 };
 
 
-
-
+let activeTransformLayerWidth;
+let activeTransformLayerHeight;
 
 // Obsługa suwaków transformacji
 layerScaleInput.oninput = e => {
     if (!activeTransformLayer) return;
     activeTransformLayer.transform.scale = parseFloat(e.target.value);
+    console.log('activeTransformLayer h', e.target.clientHeight)
+    console.log('activeTransformLayer w', e.target.clientWidth)
+    // console.log('activeTransformLayer', e.target.value)
     draw();
 };
 
@@ -439,6 +381,211 @@ layerPosYInput.oninput = e => {
     activeTransformLayer.transform.y = parseFloat(e.target.value);
     draw();
 };
+
+// NEW TRANSFORM LOGIC
+
+//mowe
+document.addEventListener("keydown", e => {
+    if (!activeTransformLayer) return;
+
+    const step = e.ctrlKey ? 10 : 0; // tylko z Ctrl
+
+    if (step === 0) return;
+
+    switch (e.key) {
+        case "ArrowUp":
+            activeTransformLayer.transform.y -= step;
+            break;
+        case "ArrowDown":
+            activeTransformLayer.transform.y += step;
+            break;
+        case "ArrowLeft":
+            activeTransformLayer.transform.x -= step;
+            break;
+        case "ArrowRight":
+            activeTransformLayer.transform.x += step;
+            break;
+    }
+
+    draw();
+});
+
+let mouseMoveMode = false;
+
+document.addEventListener("keydown", e => {
+    if (e.ctrlKey) mouseMoveMode = true;
+});
+
+document.addEventListener("keyup", e => {
+    if (!e.ctrlKey) mouseMoveMode = false;
+});
+
+overlay.addEventListener("mousemove", e => {
+    if (!mouseMoveMode || !activeTransformLayer) return;
+
+    const rect = overlay.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    activeTransformLayer.transform.x = mx;
+    activeTransformLayer.transform.y = my;
+
+    draw();
+});
+
+
+
+// scale
+let draggingHandle = null;
+
+overlay.addEventListener("mousedown", e => {
+    if (!activeTransformLayer) return;
+
+    const rect = overlay.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    draggingHandle = detectHandle(mx, my);
+
+    // if (draggingHandle) {
+    //     overlay.style.pointerEvents = "auto";
+    // }
+});
+
+// Skalowanie podczas przeciągania
+overlay.addEventListener("mousemove", e => {
+    if (!draggingHandle) return;
+
+    const rect = overlay.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    const layer = activeTransformLayer;
+
+    // obliczamy nowy scale na podstawie odległości od środka
+    const dx = mx - layer.transform.x;
+    const dy = my - layer.transform.y;
+
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    const base = Math.max(layer.canvas.width, layer.canvas.height);
+
+    layer.transform.scale = dist / base;
+
+    if (draggingHandle === "rotate") {
+        const dx = mx - layer.transform.x;
+        const dy = my - layer.transform.y;
+        layer.transform.rotation = Math.atan2(dy, dx) * 180 / Math.PI;
+        draw();
+    }
+
+    draw();
+});
+
+
+// Funkcja wykrywania uchwytu
+// function drawTransformBox() {
+//     const layer = activeTransformLayer;
+//     if (!layer) return;
+
+//     const ctx = overlay.getContext("2d");
+//     ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+//     const { x, y, scale, rotation } = layer.transform;
+//     const w = layer.canvas.width;
+//     const h = layer.canvas.height;
+
+//     ctx.save();
+
+//     // 🔥 identyczna kolejność jak w shaderze
+//     ctx.translate(x, y);
+//     ctx.rotate(rotation * Math.PI / 180);
+//     ctx.scale(scale, scale);
+
+//     // ramka
+//     ctx.strokeStyle = "#00aaff";
+//     ctx.lineWidth = 1.5;
+//     ctx.strokeRect(-w/2, -h/2, w, h);
+
+//     // uchwyty
+//     const size = 8;
+//     const half = size / 2;
+
+//     const points = [
+//         [-w/2, -h/2],
+//         [ w/2, -h/2],
+//         [ w/2,  h/2],
+//         [-w/2,  h/2]
+//     ];
+
+//     ctx.fillStyle = "#00aaff";
+//     for (const [px, py] of points) {
+//         ctx.fillRect(px - half, py - half, size, size);
+//     }
+
+//     // uchwyt rotacji
+//     ctx.beginPath();
+//     ctx.arc(0, -h/2 - 20, 6, 0, Math.PI*2);
+//     ctx.fill();
+
+//     ctx.restore();
+// }
+
+
+
+
+function drawTransformBox() {
+    const layer = activeTransformLayer;
+    if (!layer) return;
+
+    // const ctx = overlay.getContext("2d");
+    // ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+    const { x, y, scale, rotation } = layer.transform;
+    const w = layer.canvas.width;
+    const h = layer.canvas.height;
+
+    const ctx = overlay.getContext("2d");
+    ctx.clearRect(0, 0, w, h);
+
+    ctx.save();
+
+    // 🔥 identyczna kolejność jak w WebGL
+    ctx.translate(x, y);
+    ctx.rotate(rotation * Math.PI / 180);
+    ctx.scale(scale, scale);
+
+    // ramka
+    ctx.strokeStyle = "#00aaff";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(-w/2, -h/2, w, h);
+
+    // uchwyty
+    const size = 8;
+    const half = size / 2;
+
+    const points = [
+        [-w/2, -h/2],
+        [ w/2, -h/2],
+        [ w/2,  h/2],
+        [-w/2,  h/2]
+    ];
+
+    ctx.fillStyle = "#00aaff";
+    for (const [px, py] of points) {
+        ctx.fillRect(px - half, py - half, size, size);
+    }
+
+    // uchwyt rotacji
+    ctx.beginPath();
+    ctx.arc(0, -h/2 - 20, 6, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+
+// =========================
+
 
 
 

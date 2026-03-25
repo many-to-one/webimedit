@@ -1,6 +1,9 @@
 let tex = null;
 
 function draw() {
+
+  // overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+
   if (!tex || currentImageIndex === null) return;
 
   const image = images[currentImageIndex];
@@ -85,6 +88,93 @@ function draw() {
 
   // Disable blending after draw (optional cleanup)
   gl.disable(gl.BLEND);
+
+  drawTransformBox(activeTransformLayer)
 }
 
+
+// ramka z uchwytami do transform logiki
+// function detectHandle(mx, my) {
+//     const layer = activeTransformLayer;
+//     const { x, y, scale, rotation } = layer.transform;
+//     const w = layer.canvas.width;
+//     const h = layer.canvas.height;
+
+//     // 🔥 punkt myszy → lokalne współrzędne warstwy
+//     let dx = mx - x;
+//     let dy = my - y;
+
+//     // odwrotna rotacja
+//     const angle = -rotation * Math.PI / 180;
+//     const rx = dx * Math.cos(angle) - dy * Math.sin(angle);
+//     const ry = dx * Math.sin(angle) + dy * Math.cos(angle);
+
+//     // odwrotna skala
+//     const lx = rx / scale;
+//     const ly = ry / scale;
+
+//     const size = 10;
+
+//     const handles = [
+//         { name: "tl", x: -w/2, y: -h/2 },
+//         { name: "tr", x:  w/2, y: -h/2 },
+//         { name: "br", x:  w/2, y:  h/2 },
+//         { name: "bl", x: -w/2, y:  h/2 }
+//     ];
+
+//     for (const h of handles) {
+//         if (Math.abs(lx - h.x) < size && Math.abs(ly - h.y) < size) {
+//             return h.name;
+//         }
+//     }
+
+//     // uchwyt rotacji
+//     if (Math.hypot(lx - 0, ly - (-h/2 - 20)) < 10)
+//         return "rotate";
+
+//     return null;
+// }
+
+
+function detectHandle(mx, my) {
+    const layer = activeTransformLayer;
+    console.log('detectHandle layer', layer)
+    const { x, y, scale, rotation } = layer.transform;
+    const w = layer.canvas.width;
+    const h = layer.canvas.height;
+
+    // 🔥 transformacja odwrotna
+    let dx = mx - x;
+    let dy = my - y;
+
+    // odwrotna rotacja
+    const angle = -rotation * Math.PI / 180;
+    const rx = dx * Math.cos(angle) - dy * Math.sin(angle);
+    const ry = dx * Math.sin(angle) + dy * Math.cos(angle);
+
+    // odwrotna skala
+    const lx = rx / scale;
+    const ly = ry / scale;
+
+    const size = 10;
+
+    const handles = [
+        { name: "tl", x: -w/2, y: -h/2 },
+        { name: "tr", x:  w/2, y: -h/2 },
+        { name: "br", x:  w/2, y:  h/2 },
+        { name: "bl", x: -w/2, y:  h/2 }
+    ];
+
+    for (const h of handles) {
+        if (Math.abs(lx - h.x) < size && Math.abs(ly - h.y) < size) {
+            return h.name;
+        }
+    }
+
+    // uchwyt rotacji
+    if (Math.hypot(lx - 0, ly - (-h/2 - 20)) < 10)
+        return "rotate";
+
+    return null;
+}
 

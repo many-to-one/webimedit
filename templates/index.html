@@ -121,9 +121,17 @@
     </div>
 
 
-    <div class="card-img" style= "overflow:hidden;">
+    <!-- <div class="card-img" style= "overflow:hidden;">
       <canvas id="glcanvas" width="800" height="600" style="display:block;"></canvas>
+    </div> -->
+
+    <div class="card-img" style="position:relative; overflow:hidden;">
+      <canvas id="glcanvas" width="800" height="600" style="display:block;"></canvas>
+      <canvas id="overlay" width="800" height="600"
+          style="position:absolute; left:0; top:0; pointer-events:auto; z-index:10;"></canvas>
     </div>
+
+
 
     <!-- Gallery strip -->
     <div id="gallery" style="display:flex; overflow-x:auto; gap:8px; margin-top:12px;"></div>
@@ -317,9 +325,10 @@
 <script src="/static/js/shader_new.js"></script>
 <script src="/static/js/uniforms.js"></script>
 <script src="/static/js/texture.js"></script>
-<script src="/static/js/draw.js"></script>
+<!-- <script src="/static/js/draw.js"></script> -->
 <script src="/static/js/tools.js"></script>
 <script src="/static/js/transform.js"></script>
+<script src="/static/js/draw.js"></script>
 
 <script src="/static/js/zoom.js"></script>
 <script src="/static/js/ui_helpers.js"></script>
