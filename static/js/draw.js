@@ -89,92 +89,72 @@ function draw() {
   // Disable blending after draw (optional cleanup)
   gl.disable(gl.BLEND);
 
-  drawTransformBox(activeTransformLayer)
+  // syncOverlay();
+  // drawTransformBox(activeTransformLayer)
+
 }
 
 
-// ramka z uchwytami do transform logiki
-// function detectHandle(mx, my) {
+
+function syncOverlay() {
+    const rect = glcanvas.getBoundingClientRect();
+
+    // CSS size (to match screen)
+    overlay.style.width = rect.width + "px";
+    overlay.style.height = rect.height + "px";
+    overlay.style.left = rect.left + "px";
+    overlay.style.top = rect.top + "px";
+
+    // INTERNAL pixel size (to match WebGL)
+    overlay.width = glcanvas.width;
+    overlay.height = glcanvas.height;
+}
+
+
+// Funkcja wykrywania uchwytu
+// function drawTransformBox() {
 //     const layer = activeTransformLayer;
+//     if (!layer) return;
+
+//     const ctx = glcanvas.getContext("2d");
+//     ctx.clearRect(0, 0, overlay.width, overlay.height);
+
 //     const { x, y, scale, rotation } = layer.transform;
 //     const w = layer.canvas.width;
 //     const h = layer.canvas.height;
 
-//     // 🔥 punkt myszy → lokalne współrzędne warstwy
-//     let dx = mx - x;
-//     let dy = my - y;
+//     const cx = glcanvas.width / 2;
+//     const cy = glcanvas.height / 2;
 
-//     // odwrotna rotacja
-//     const angle = -rotation * Math.PI / 180;
-//     const rx = dx * Math.cos(angle) - dy * Math.sin(angle);
-//     const ry = dx * Math.sin(angle) + dy * Math.cos(angle);
+//     ctx.save();
 
-//     // odwrotna skala
-//     const lx = rx / scale;
-//     const ly = ry / scale;
+//     // 🔥 tak samo jak w WebGL: środek canvasa + przesunięcie warstwy
+//     ctx.translate(cx + x, cy + y);
+//     ctx.rotate(rotation * Math.PI / 180);
+//     ctx.scale(scale, scale);
 
-//     const size = 10;
+//     ctx.strokeStyle = "#00aaff";
+//     ctx.lineWidth = 1.5;
+//     ctx.strokeRect(-w/2, -h/2, w, h);
 
-//     const handles = [
-//         { name: "tl", x: -w/2, y: -h/2 },
-//         { name: "tr", x:  w/2, y: -h/2 },
-//         { name: "br", x:  w/2, y:  h/2 },
-//         { name: "bl", x: -w/2, y:  h/2 }
+//     const size = 8;
+//     const half = size / 2;
+//     const points = [
+//         [-w/2, -h/2],
+//         [ w/2, -h/2],
+//         [ w/2,  h/2],
+//         [-w/2,  h/2]
 //     ];
 
-//     for (const h of handles) {
-//         if (Math.abs(lx - h.x) < size && Math.abs(ly - h.y) < size) {
-//             return h.name;
-//         }
+//     ctx.fillStyle = "#00aaff";
+//     for (const [px, py] of points) {
+//         ctx.fillRect(px - half, py - half, size, size);
 //     }
 
-//     // uchwyt rotacji
-//     if (Math.hypot(lx - 0, ly - (-h/2 - 20)) < 10)
-//         return "rotate";
+//     ctx.beginPath();
+//     ctx.arc(0, -h/2 - 20, 6, 0, Math.PI*2);
+//     ctx.fill();
 
-//     return null;
+//     ctx.restore();
 // }
-
-
-function detectHandle(mx, my) {
-    const layer = activeTransformLayer;
-    console.log('detectHandle layer', layer)
-    const { x, y, scale, rotation } = layer.transform;
-    const w = layer.canvas.width;
-    const h = layer.canvas.height;
-
-    // 🔥 transformacja odwrotna
-    let dx = mx - x;
-    let dy = my - y;
-
-    // odwrotna rotacja
-    const angle = -rotation * Math.PI / 180;
-    const rx = dx * Math.cos(angle) - dy * Math.sin(angle);
-    const ry = dx * Math.sin(angle) + dy * Math.cos(angle);
-
-    // odwrotna skala
-    const lx = rx / scale;
-    const ly = ry / scale;
-
-    const size = 10;
-
-    const handles = [
-        { name: "tl", x: -w/2, y: -h/2 },
-        { name: "tr", x:  w/2, y: -h/2 },
-        { name: "br", x:  w/2, y:  h/2 },
-        { name: "bl", x: -w/2, y:  h/2 }
-    ];
-
-    for (const h of handles) {
-        if (Math.abs(lx - h.x) < size && Math.abs(ly - h.y) < size) {
-            return h.name;
-        }
-    }
-
-    // uchwyt rotacji
-    if (Math.hypot(lx - 0, ly - (-h/2 - 20)) < 10)
-        return "rotate";
-
-    return null;
-}
 

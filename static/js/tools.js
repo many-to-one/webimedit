@@ -310,6 +310,7 @@ function applyFill() {
 // dodał rotate/scale myszką
 
 // Import obrazu jako nowej warstwy
+let _layer;
 importLayerInput.onchange = async e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -331,6 +332,7 @@ importLayerInput.onchange = async e => {
     const c = document.createElement("canvas");
     c.width = bmp.width;
     c.height = bmp.height;
+    _layer = c
     const ctx = c.getContext("2d");
     ctx.drawImage(bmp, 0, 0);
     newLayer.canvas = c;
@@ -358,11 +360,104 @@ let activeTransformLayerHeight;
 layerScaleInput.oninput = e => {
     if (!activeTransformLayer) return;
     activeTransformLayer.transform.scale = parseFloat(e.target.value);
-    console.log('activeTransformLayer h', e.target.clientHeight)
-    console.log('activeTransformLayer w', e.target.clientWidth)
-    // console.log('activeTransformLayer', e.target.value)
+    console.log('activeTransformLayer', activeTransformLayer)
+    drawTransformBox(activeTransformLayer.transform.scale)
     draw();
 };
+
+function drawTransformBox(scale_) {
+    const layer = activeTransformLayer;
+    if (!layer) return;
+    console.log('drawTransformBox layer', layer)
+
+    const image = images[currentImageIndex];
+
+    // usuń starą ramkę
+    const old = document.getElementById("transBox");
+    if (old) old.remove();
+
+    // stwórz nową
+    let box = document.createElement('div');
+    box.id = "transBox";
+
+    box.style.position = "absolute";
+    box.style.left = "0px";
+    box.style.top = "0px";
+
+    box.style.width = layer.canvas.width/3 + "px";
+    box.style.height = layer.canvas.height/3 + "px";
+
+    box.style.border = "2px solid #00aaff";
+    box.style.pointerEvents = "none";
+    box.style.zIndex = "99999";
+    
+    // 🔥 poprawne skalowanie
+    box.style.transformOrigin = "top left";
+    box.style.transform = `scale(${scale_})`;
+    // box.style.transform = `
+    //     translate(${layer.transform.x}px, ${layer.transform.y}px)
+    //     scale(${scale_})
+    //     rotate(${layer.transform.rotation}deg)
+    // `;
+
+
+    const card = document.querySelector('.card-img');
+    card.appendChild(box);
+    console.log('drawTransformBox scale_', scale_)
+}
+
+
+// function drawTransformBox() {
+//     const layer = activeTransformLayer;
+//     if (!layer) return;
+//     const image = images[currentImageIndex]
+//     console.log('drawTransformBox image', image)
+
+//     // const rect = _layer.getBoundingClientRect();
+
+//     const ctx = _layer.getContext("2d");
+//     ctx.clearRect(0, 0, image.bmp.width, image.bmp.height);
+//     console.log('drawTransformBox ctx', ctx)
+
+//     const { x, y, scale, rotation } = layer.transform;
+//     const w = layer.canvas.width;
+//     const h = layer.canvas.height;
+
+//     const cx = image.bmp.width / 2;
+//     const cy = image.bmp.height / 2;
+
+//     ctx.save();
+
+//     // 🔥 tak samo jak w WebGL: środek canvasa + przesunięcie warstwy
+//     ctx.translate(cx + x, cy + y);
+//     ctx.rotate(rotation * Math.PI / 180);
+//     ctx.scale(scale, scale);
+
+//     ctx.strokeStyle = "#00aaff";
+//     ctx.lineWidth = 3.5;
+//     ctx.strokeRect(-w/2, -h/2, w, h);
+
+//     const size = 8;
+//     const half = size / 2;
+//     const points = [
+//         [-w/2, -h/2],
+//         [ w/2, -h/2],
+//         [ w/2,  h/2],
+//         [-w/2,  h/2]
+//     ];
+
+//     ctx.fillStyle = "#00aaff";
+//     for (const [px, py] of points) {
+//         ctx.fillRect(px - half, py - half, size, size);
+//     }
+
+//     ctx.beginPath();
+//     ctx.arc(0, -h/2 - 20, 6, 0, Math.PI*2);
+//     ctx.fill();
+
+//     ctx.restore();
+// }
+
 
 layerRotationInput.oninput = e => {
     if (!activeTransformLayer) return;
@@ -385,7 +480,7 @@ layerPosYInput.oninput = e => {
 // NEW TRANSFORM LOGIC
 
 //mowe
-document.addEventListener("keydown", e => {
+document.addEventListener("keydown", e => { 
     if (!activeTransformLayer) return;
 
     const step = e.ctrlKey ? 10 : 0; // tylko z Ctrl
@@ -410,55 +505,81 @@ document.addEventListener("keydown", e => {
     draw();
 });
 
-let mouseMoveMode = false;
 
-document.addEventListener("keydown", e => {
-    if (e.ctrlKey) mouseMoveMode = true;
+
+// Przesuwanie
+let isDraggingLayer = false;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+
+glcanvas.addEventListener("mousedown", e => {
+    if (!activeTransformLayer) return;
+
+    // tylko jeśli Ctrl jest wciśnięty
+    if (!e.ctrlKey) return;
+
+    const rect = glcanvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (glcanvas.width / rect.width);
+    const my = (e.clientY - rect.top)  * (glcanvas.height / rect.height);
+
+
+    // obliczamy offset, żeby warstwa nie skakała
+    dragOffsetX = mx - activeTransformLayer.transform.x;
+    dragOffsetY = my - activeTransformLayer.transform.y;
+
+    isDraggingLayer = true;
 });
 
-document.addEventListener("keyup", e => {
-    if (!e.ctrlKey) mouseMoveMode = false;
-});
+glcanvas.addEventListener("mousemove", e => {
+    if (!isDraggingLayer || !activeTransformLayer) return;
 
-overlay.addEventListener("mousemove", e => {
-    if (!mouseMoveMode || !activeTransformLayer) return;
+    const rect = glcanvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (glcanvas.width / rect.width);
+    const my = (e.clientY - rect.top)  * (glcanvas.height / rect.height);
 
-    const rect = overlay.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
 
-    activeTransformLayer.transform.x = mx;
-    activeTransformLayer.transform.y = my;
+    activeTransformLayer.transform.x = mx - dragOffsetX;
+    activeTransformLayer.transform.y = my - dragOffsetY;
 
     draw();
 });
 
+glcanvas.addEventListener("mouseup", () => {
+    isDraggingLayer = false;
+});
+
+glcanvas.addEventListener("mouseleave", () => {
+    isDraggingLayer = false;
+});
 
 
 // scale
 let draggingHandle = null;
 
-overlay.addEventListener("mousedown", e => {
+glcanvas.addEventListener("mousedown", e => {
     if (!activeTransformLayer) return;
 
-    const rect = overlay.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+    // const rect = overlay.getBoundingClientRect();
+    // const mx = e.clientX - rect.left;
+    // const my = e.clientY - rect.top;
+    const rect = glcanvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (glcanvas.width / rect.width);
+    const my = (e.clientY - rect.top)  * (glcanvas.height / rect.height);
 
-    draggingHandle = detectHandle(mx, my);
 
-    // if (draggingHandle) {
-    //     overlay.style.pointerEvents = "auto";
-    // }
+    draggingHandle = detectHandle(e, mx, my);
+    // syncOverlay();
+
 });
 
 // Skalowanie podczas przeciągania
-overlay.addEventListener("mousemove", e => {
+glcanvas.addEventListener("mousemove", e => {
     if (!draggingHandle) return;
 
-    const rect = overlay.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+    const rect = glcanvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (glcanvas.width / rect.width);
+    const my = (e.clientY - rect.top)  * (glcanvas.height / rect.height);
+
 
     const layer = activeTransformLayer;
 
@@ -482,106 +603,49 @@ overlay.addEventListener("mousemove", e => {
 });
 
 
+
 // Funkcja wykrywania uchwytu
-// function drawTransformBox() {
-//     const layer = activeTransformLayer;
-//     if (!layer) return;
-
-//     const ctx = overlay.getContext("2d");
-//     ctx.clearRect(0, 0, overlay.width, overlay.height);
-
-//     const { x, y, scale, rotation } = layer.transform;
-//     const w = layer.canvas.width;
-//     const h = layer.canvas.height;
-
-//     ctx.save();
-
-//     // 🔥 identyczna kolejność jak w shaderze
-//     ctx.translate(x, y);
-//     ctx.rotate(rotation * Math.PI / 180);
-//     ctx.scale(scale, scale);
-
-//     // ramka
-//     ctx.strokeStyle = "#00aaff";
-//     ctx.lineWidth = 1.5;
-//     ctx.strokeRect(-w/2, -h/2, w, h);
-
-//     // uchwyty
-//     const size = 8;
-//     const half = size / 2;
-
-//     const points = [
-//         [-w/2, -h/2],
-//         [ w/2, -h/2],
-//         [ w/2,  h/2],
-//         [-w/2,  h/2]
-//     ];
-
-//     ctx.fillStyle = "#00aaff";
-//     for (const [px, py] of points) {
-//         ctx.fillRect(px - half, py - half, size, size);
-//     }
-
-//     // uchwyt rotacji
-//     ctx.beginPath();
-//     ctx.arc(0, -h/2 - 20, 6, 0, Math.PI*2);
-//     ctx.fill();
-
-//     ctx.restore();
-// }
-
-
-
-
-function drawTransformBox() {
+function detectHandle(mx, my) {
     const layer = activeTransformLayer;
-    if (!layer) return;
-
-    // const ctx = overlay.getContext("2d");
-    // ctx.clearRect(0, 0, overlay.width, overlay.height);
-
     const { x, y, scale, rotation } = layer.transform;
     const w = layer.canvas.width;
     const h = layer.canvas.height;
 
-    const ctx = overlay.getContext("2d");
-    ctx.clearRect(0, 0, w, h);
+    const cx = glcanvas.width / 2;
+    const cy = glcanvas.height / 2;
 
-    ctx.save();
+    // najpierw do przestrzeni canvasa WebGL
+    let dx = mx - (cx + x);
+    let dy = my - (cy + y);
 
-    // 🔥 identyczna kolejność jak w WebGL
-    ctx.translate(x, y);
-    ctx.rotate(rotation * Math.PI / 180);
-    ctx.scale(scale, scale);
+    const angle = -rotation * Math.PI / 180;
+    const rx = dx * Math.cos(angle) - dy * Math.sin(angle);
+    const ry = dx * Math.sin(angle) + dy * Math.cos(angle);
 
-    // ramka
-    ctx.strokeStyle = "#00aaff";
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(-w/2, -h/2, w, h);
+    const lx = rx / scale;
+    const ly = ry / scale;
 
-    // uchwyty
-    const size = 8;
-    const half = size / 2;
-
-    const points = [
-        [-w/2, -h/2],
-        [ w/2, -h/2],
-        [ w/2,  h/2],
-        [-w/2,  h/2]
+    const size = 10;
+    const handles = [
+        { name: "tl", x: -w/2, y: -h/2 },
+        { name: "tr", x:  w/2, y: -h/2 },
+        { name: "br", x:  w/2, y:  h/2 },
+        { name: "bl", x: -w/2, y:  h/2 }
     ];
 
-    ctx.fillStyle = "#00aaff";
-    for (const [px, py] of points) {
-        ctx.fillRect(px - half, py - half, size, size);
+    for (const h of handles) {
+        if (Math.abs(lx - h.x) < size && Math.abs(ly - h.y) < size) {
+            return h.name;
+        }
     }
 
-    // uchwyt rotacji
-    ctx.beginPath();
-    ctx.arc(0, -h/2 - 20, 6, 0, Math.PI*2);
-    ctx.fill();
+    if (Math.hypot(lx - 0, ly - (-h/2 - 20)) < 10)
+        return "rotate";
 
-    ctx.restore();
+    return null;
 }
+
+
 
 
 // =========================
