@@ -46,31 +46,38 @@ const vsSrc = `
   uniform float u_rotation;
 
   void main() {
-      v_uv = a_uv;
+    v_uv = a_uv;
 
-      // convert quad from [-1..1] to [0..layerSize]
-      vec2 pos = a_pos * 0.5 + 0.5;
-      pos *= u_layerSize;
+    // convert quad from [-1..1] to [0..layerSize]
+    vec2 pos = a_pos * 0.5 + 0.5;
+    pos *= u_layerSize;
 
-      // apply scale
-      pos *= u_scale;
+    // 🔥 move origin to center
+    pos -= u_layerSize * 0.5;
 
-      // apply rotation
-      float s = sin(u_rotation);
-      float c = cos(u_rotation);
-      pos = vec2(
-          pos.x * c - pos.y * s,
-          pos.x * s + pos.y * c
-      );
+    // 🔥 apply scale
+    pos *= u_scale;
 
-      // apply translation (in pixels)
-      pos += u_translate;
+    // 🔥 apply rotation
+    float s = sin(u_rotation);
+    float c = cos(u_rotation);
+    pos = vec2(
+        pos.x * c - pos.y * s,
+        pos.x * s + pos.y * c
+    );
 
-      // convert from pixels → NDC
-      vec2 ndc = (pos / u_resolution) * 2.0 - 1.0;
+    // 🔥 move origin back
+    pos += u_layerSize * 0.5;
 
-      gl_Position = vec4(ndc, 0.0, 1.0);
-  }
+    // 🔥 apply translation (in pixels)
+    pos += u_translate;
+
+    // convert from pixels → NDC
+    vec2 ndc = (pos / u_resolution) * 2.0 - 1.0;
+
+    gl_Position = vec4(ndc, 0.0, 1.0);
+}
+
 
 `
 

@@ -392,7 +392,8 @@ function drawTransformBox(scale_) {
     box.style.zIndex = "99999";
     
     // 🔥 poprawne skalowanie
-    box.style.transformOrigin = "top left";
+    // box.style.transformOrigin = "top left";
+    box.style.transformOrigin = "center center";
     box.style.transform = `scale(${scale_})`;
 
     // 🔥 dodajemy 8 uchwytów
