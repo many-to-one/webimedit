@@ -25,3 +25,19 @@
 #transBox .bl { left: -6px; bottom: -6px; cursor: nesw-resize; }
 #transBox .bm { left: 50%; bottom: -6px; transform: translateX(-50%); cursor: ns-resize; }
 #transBox .br { right: -6px; bottom: -6px; cursor: nwse-resize; }
+
+
+/* Rotate */
+#transBox .handle.rotate {
+    width: 14px;
+    height: 14px;
+    background: white;
+    border: 2px solid #00aaff;
+    border-radius: 50%;
+    position: absolute;
+    top: -30px; /* nad ramką */
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: grab;
+    pointer-events: auto;
+}

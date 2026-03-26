@@ -50,3 +50,49 @@ function startResize(handle, e) {
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
 }
+
+
+
+
+function startRotate(e) {
+    const layer = activeTransformLayer;
+
+    const rect = document.getElementById("transBox").getBoundingClientRect();
+
+    // środek ramki (i warstwy)
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    const startAngle = layer.transform.rotation;
+
+    // początkowy kąt względem środka
+    const startX = e.clientX - cx;
+    const startY = e.clientY - cy;
+    const startTheta = Math.atan2(startY, startX);
+
+    function onMove(ev) {
+        const x = ev.clientX - cx;
+        const y = ev.clientY - cy;
+
+        const theta = Math.atan2(y, x);
+
+        // różnica kątów
+        const delta = theta - startTheta;
+
+        // konwersja na stopnie
+        const deg = delta * 180 / Math.PI;
+
+        layer.transform.rotation = startAngle + deg;
+
+        drawTransformBox(layer.transform.scale);
+        draw();
+    }
+
+    function onUp() {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+    }
+
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+}
