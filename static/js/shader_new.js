@@ -33,6 +33,39 @@ if(!gl){ alert('WebGL not supported'); throw new Error('WebGL not supported'); }
 // }
 // `;
 
+//   void main() {
+//     v_uv = a_uv;
+
+//     // convert quad from [-1..1] to [0..layerSize]
+//     vec2 pos = a_pos * 0.5 + 0.5;
+//     pos *= u_layerSize;
+
+//     // 🔥 move origin to center
+//     pos -= u_layerSize * 0.5;
+
+//     // 🔥 apply scale
+//     pos *= u_scale;
+
+//     // 🔥 apply rotation
+//     float s = sin(u_rotation);
+//     float c = cos(u_rotation);
+//     pos = vec2(
+//         pos.x * c - pos.y * s,
+//         pos.x * s + pos.y * c
+//     );
+
+//     // 🔥 move origin back
+//     pos += u_layerSize * 0.5;
+
+//     // 🔥 apply translation (in pixels)
+//     pos += u_translate;
+
+//     // convert from pixels → NDC
+//     vec2 ndc = (pos / u_resolution) * 2.0 - 1.0;
+
+//     gl_Position = vec4(ndc, 0.0, 1.0);
+// }
+
 const vsSrc = `
   attribute vec2 a_pos;
   attribute vec2 a_uv;
@@ -45,20 +78,20 @@ const vsSrc = `
   uniform float u_scale;
   uniform float u_rotation;
 
-  void main() {
+void main() {
     v_uv = a_uv;
 
-    // convert quad from [-1..1] to [0..layerSize]
+    // quad w [0..layerSize]
     vec2 pos = a_pos * 0.5 + 0.5;
     pos *= u_layerSize;
 
-    // 🔥 move origin to center
+    // przenieś środek warstwy do (0,0)
     pos -= u_layerSize * 0.5;
 
-    // 🔥 apply scale
+    // skala
     pos *= u_scale;
 
-    // 🔥 apply rotation
+    // rotacja
     float s = sin(u_rotation);
     float c = cos(u_rotation);
     pos = vec2(
@@ -66,13 +99,17 @@ const vsSrc = `
         pos.x * s + pos.y * c
     );
 
-    // 🔥 move origin back
-    pos += u_layerSize * 0.5;
+    // 🔥 teraz pos jest względem środka warstwy,
+    // a u_translate traktujemy jako przesunięcie środka warstwy
+    // względem środka canvasa (w pikselach)
 
-    // 🔥 apply translation (in pixels)
-    pos += u_translate;
+    // środek canvasa
+    vec2 canvasCenter = u_resolution * 0.5;
 
-    // convert from pixels → NDC
+    // dodaj przesunięcie od środka
+    pos += canvasCenter + u_translate;
+
+    // pixels → NDC
     vec2 ndc = (pos / u_resolution) * 2.0 - 1.0;
 
     gl_Position = vec4(ndc, 0.0, 1.0);
