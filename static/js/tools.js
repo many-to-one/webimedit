@@ -123,6 +123,23 @@ window.activateTool = function(name) {
     if (name === "transform") {
         transformSettings.style.display = "block";
         if (activeTransformLayer) drawTransformBox(activeTransformLayer.transform.scale);
+        console.log("moveBtn clicked", moveBtn);
+        let visibleBox = document.getElementById("transBox");
+        let boxHandles = document.querySelectorAll('.handle');
+        if (!visibleBox) {
+            drawTransformBox(activeTransformLayer.transform.scale);
+            draw();
+        };
+        
+        if (visibleBox.style.display === "none") {
+            visibleBox.style.display = "block";
+            boxHandles.forEach(h => h.style.display = "block");
+        console.log("transBox active")
+        } else {   
+            transformSettings.style.display = "none";
+            visibleBox.style.display = "none";
+            boxHandles.forEach(h => h.style.display = "none");
+        }
     }
 
     // kursory
@@ -379,12 +396,29 @@ importLayerInput.onchange = async e => {
     console.log("LAYER IMAGE", image.layers[0].canvas.style)
             
     updateLayerUI();
-    drawTransformBox(newLayer.transform.scale);
+    // drawTransformBox(newLayer.transform.scale);
     draw();
 };
 
 
-
+// moveBtn.onclick = () => {
+//     console.log("moveBtn clicked", moveBtn);
+//     let visibleBox = document.getElementById("transBox");
+//     let boxHandles = document.querySelectorAll('.handle');
+//     if (!visibleBox) {
+//         drawTransformBox(activeTransformLayer.transform.scale);
+//         draw();
+//     };
+    
+//     if (visibleBox.style.display === "none") {
+//         visibleBox.style.display = "block";
+//         boxHandles.forEach(h => h.style.display = "block");
+//     console.log("transBox active")
+//     } else {   
+//         visibleBox.style.display = "none";
+//         boxHandles.forEach(h => h.style.display = "none");
+//     }
+// };
 
 
 let activeTransformLayerWidth;
@@ -403,6 +437,7 @@ function drawTransformBox(scale_) {
     const layer = activeTransformLayer;
     if (!layer) return;
     console.log('drawTransformBox layer', layer)
+    console.log('drawTB moveBtn', moveBtn)
 
     const image = images[currentImageIndex];
     const card = document.querySelector('.card-img');
@@ -522,6 +557,12 @@ document.addEventListener("mousedown", e => {
         const handle = e.target.classList[1];
         startResize(handle, e);
     }
+});
+
+document.addEventListener("scroll", () => {
+    // console.log("scroll");
+    if (activeTransformLayer) drawTransformBox(activeTransformLayer.transform.scale);
+    draw();
 });
 
 
@@ -977,3 +1018,19 @@ function processBrushQueue() {
 
     requestAnimationFrame(processBrushQueue);
 }
+
+
+
+// document.addEventListener("click", e => {
+//     console.log("click", e.target);
+//     image = images[currentImageIndex];
+//     layer = image.layers[image.activeLayer];
+//     console.log("active layer", layer.transform);
+
+//      // 5. Punkt kliknięcia
+//     const px = e.clientX;
+//     const py = e.clientY;
+//     console.log("click at", px, py);
+
+// });
+
