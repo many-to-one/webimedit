@@ -6,87 +6,6 @@ const layerStatus = document.getElementById('layerStatus');
 const layerPanel = document.getElementById('layerPanel');
 
 
-// function createEmptyLayer(name, width, height, sourceImage = null) {
-//   const canvas = document.createElement("canvas");
-//   canvas.width = width;
-//   canvas.height = height;
-
-//   const ctx = canvas.getContext("2d");
-//   if (sourceImage) ctx.drawImage(sourceImage, 0, 0);
-
-//   const tex = gl.createTexture();
-//   // gl.bindTexture(gl.TEXTURE_2D, tex);
-//   // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-//   // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-//   // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-//   // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-//   // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
-
-//   const maskCanvas = document.createElement("canvas");
-//   maskCanvas.width = width;
-//   maskCanvas.height = height;
-//   const maskCtx = maskCanvas.getContext("2d");
-//   maskCtx.fillStyle = "rgba(255,255,255,1)";
-//   maskCtx.fillRect(0, 0, width, height);
-
-//   const maskTex = gl.createTexture();
-//   gl.bindTexture(gl.TEXTURE_2D, maskTex);
-//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-//   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-//   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, maskCanvas);
-
-
-//   return {
-//     name,
-//     visible: true,
-//     canvas,
-//     tex,
-//     mask: maskCanvas,
-//     maskTex: maskTex,
-
-
-//     transform: {
-//       x: 0,
-//       y: 0,
-//       scale: 1,
-//       rotation: 0
-//     },
-
-//     settings: {
-//       basic: {
-//         exposure: 0,
-//         contrast: 0,
-//         highlights: 0,
-//         shadows: 0,
-//         whites: 0,
-//         blacks: 0,
-//         clarity: 0,
-//         texture: 0,
-//         dehaze: 0
-//       },
-
-//       calibration: {
-//         redHue: 0,
-//         redSat: 0,
-//         greenHue: 0,
-//         greenSat: 0,
-//         blueHue: 0,
-//         blueSat: 0
-//       },
-
-//       hsl: Array(8).fill().map(() => ({
-//         hue: 0,
-//         sat: 1,
-//         lig: 1
-//       }))
-//     }
-
-//   };
-// }
-
-
 
 function ensureLayerId(layer) {
   if (!layer.id) {
@@ -211,6 +130,7 @@ function switchLayer(index) {
   image.activeLayer = index;
 
   activeTransformLayer = image.layers[index];
+  drawTransformBox(activeTransformLayer.transform.scale);
 
   updateLayerUI();
   restoreSliders(image.layers[index].settings);
@@ -229,6 +149,7 @@ function updateLayerUI() {
     // Thumbnail
     const thumb = document.createElement('img');
     thumb.className = 'layer-thumb';
+    thumb.id = `thumb-${layer.id}`;
     const canvas = document.createElement('canvas');
     canvas.width = 40;
     canvas.height = 30;

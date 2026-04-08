@@ -122,7 +122,7 @@ window.activateTool = function(name) {
     if (name === "brush")  brushSettings.style.display  = "block";
     if (name === "transform") {
         transformSettings.style.display = "block";
-        if (activeTransformLayer) drawTransformBox(activeTransformLayer.transform.scale);
+        // if (activeTransformLayer) drawTransformBox(activeTransformLayer.transform.scale);
         console.log("moveBtn clicked", moveBtn);
         let visibleBox = document.getElementById("transBox");
         let boxHandles = document.querySelectorAll('.handle');
@@ -148,6 +148,8 @@ window.activateTool = function(name) {
         brushCursor.style.display = "block";
         eraserCursor.style.display = "none";
     }
+
+    if (name === "fill") fillSettings.style.display = "block";
 
     else if (name === "eraser") {
         canvas.style.cursor = "none";
@@ -780,6 +782,42 @@ function setTextureDefaults(gl) {
 
 
 // =========================
+// HELPERS
+// =========================
+function convertMouseToLayerCoords(mouseX, mouseY, layer, layerWidth, layerHeight) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const xCanvas = mouseX * scaleX;
+    const yCanvas = mouseY * scaleY;
+    const canvasCenterX = canvas.width / 2;
+    const canvasCenterY = canvas.height / 2;
+
+    const t = layer.transform || { x: 0, y: 0, scale: 1, rotation: 0 };
+
+    // convert screen-space canvas point to layer-space origin at layer center
+    let localX = (xCanvas - canvasCenterX - t.x) / t.scale;
+    let localY = (yCanvas - canvasCenterY - t.y) / t.scale;
+
+    // undo rotation
+    if (t.rotation && t.rotation !== 0) {
+        const rad = -t.rotation * Math.PI / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const rotatedX = localX * cos - localY * sin;
+        const rotatedY = localX * sin + localY * cos;
+        localX = rotatedX;
+        localY = rotatedY;
+    }
+
+    return {
+        x: localX + layerWidth / 2,
+        y: localY + layerHeight / 2
+    };
+}
+
+// =========================
 // MOUSEMOVE – KURSORY + KOLEJKI
 // =========================
 canvas.addEventListener("mousemove", (e) => {
@@ -909,23 +947,20 @@ function processEraserQueue() {
     }
 
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    const layerWidth = layer.mask ? layer.mask.width : image.bmp.width;
+    const layerHeight = layer.mask ? layer.mask.height : image.bmp.height;
 
     const ctx = layer.mask.getContext("2d");
     ctx.globalCompositeOperation = "destination-out";
 
     for (const p of pendingEraserPoints) {
+        const point = convertMouseToLayerCoords(p.x, p.y, layer, layerWidth, layerHeight);
 
-        const t = layer.transform;
-        const normX = ((p.x * scaleX) - t.x) / t.scale;
-        const normY = ((p.y * scaleY) - t.y) / t.scale;
-
-        const grad = ctx.createRadialGradient(normX, normY, 0, normX, normY, eraserRadius);
+        const grad = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, eraserRadius);
         grad.addColorStop(0, `rgba(0,0,0,${eraserPower})`);
         grad.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = grad;
-        ctx.fillRect(normX - eraserRadius, normY - eraserRadius, eraserRadius * 2, eraserRadius * 2);
+        ctx.fillRect(point.x - eraserRadius, point.y - eraserRadius, eraserRadius * 2, eraserRadius * 2);
     }
 
     pendingEraserPoints = [];
@@ -970,30 +1005,27 @@ function processBrushQueue() {
     }
 
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    const layerWidth = layer.canvas ? layer.canvas.width : image.bmp.width;
+    const layerHeight = layer.canvas ? layer.canvas.height : image.bmp.height;
 
     const ctx = layer.canvas.getContext("2d");
     ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = brushColor;
 
     for (const p of pendingBrushPoints) {
-
-        const t = layer.transform;
-        const x = ((p.x * scaleX) - t.x) / t.scale;
-        const y = ((p.y * scaleY) - t.y) / t.scale;
+        const point = convertMouseToLayerCoords(p.x, p.y, layer, layerWidth, layerHeight);
 
         if (brushShape === "circle") {
             ctx.beginPath();
-            ctx.arc(x, y, brushRadius, 0, Math.PI * 2);
+            ctx.arc(point.x, point.y, brushRadius, 0, Math.PI * 2);
             ctx.fill();
         } else if (brushShape === "square") {
-            ctx.fillRect(x - brushRadius, y - brushRadius, brushRadius * 2, brushRadius * 2);
+            ctx.fillRect(point.x - brushRadius, point.y - brushRadius, brushRadius * 2, brushRadius * 2);
         } else if (brushShape === "custom" && customBrushImage) {
             ctx.drawImage(
                 customBrushImage,
-                x - brushRadius,
-                y - brushRadius,
+                point.x - brushRadius,
+                point.y - brushRadius,
                 brushRadius * 2,
                 brushRadius * 2
             );

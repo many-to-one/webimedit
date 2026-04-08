@@ -87,7 +87,13 @@ fileInput.addEventListener('change', async () => {
           {
             id: ++window.layerIdCounter,
             name: 'Base',
-            visible: true, 
+            visible: true,
+            transform: {
+              x: 0,
+              y: 0,
+              scale: 1,
+              rotation: 0
+            },
             settings: {
               basic: { ...defaultBasicValues },
               calibration: { ...defaultCalibrationValues },
@@ -194,6 +200,7 @@ function selectImage(index) {
   }
 
   setTextureFromImageBitmap(image.bmp, layer);
+  activeTransformLayer = layer;
   applySettings(settings);
   draw();
   highlightGallery(index);
