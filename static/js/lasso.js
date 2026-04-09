@@ -1,6 +1,28 @@
 // =========================
 // LASSO CANVAS SETUP
 // =========================
+const lassoTool = document.getElementById("tool-lasso");
+let lassoActiveTool = false;
+// const editorArea = document.querySelector("#editorArea");
+
+lassoTool.addEventListener("click", () => { 
+    lassoActiveTool = !lassoActiveTool;
+
+    if (lassoActiveTool) {
+        console.log("Activating lasso tool");
+        glcanvas.style.cursor = "crosshair";
+    } else {
+        console.log("Deactivating lasso tool");
+        glcanvas.style.cursor = "default";
+        clearMarchingAnts();
+        lassoPoints = [];
+        previewPoint = null;
+        drawLasso();
+    }
+});
+
+
+
 const lassoCanvas = document.getElementById("lassoCanvas");
 lassoCanvas.width = glcanvas.width;
 lassoCanvas.height = glcanvas.height;
@@ -22,6 +44,10 @@ let previewPoint = null;
 // MOUSE EVENTS
 // =========================
 glcanvas.addEventListener("click", e => {
+
+    if (!lassoActiveTool) return;
+
+    if (lassoActiveTool === true) {
     const p = getMousePos(e);
 
     if (!lassoActive) {
@@ -45,6 +71,7 @@ glcanvas.addEventListener("click", e => {
     lassoPoints.push(p);
     previewPoint = null;
     drawLasso();
+}
 });
 
 glcanvas.addEventListener("mousemove", e => {
@@ -91,6 +118,8 @@ function getMousePos(e) {
 // DRAW LASSO
 // =========================
 function drawLasso() {
+
+    stopMarchingAnts();
     const ctx = lassoCanvas.getContext("2d");
     ctx.clearRect(0, 0, lassoCanvas.width, lassoCanvas.height);
 
@@ -123,20 +152,85 @@ function drawLasso() {
 // =========================
 // CLOSE LASSO
 // =========================
+// function closeLasso() {
+//     lassoActive = false;
+//     previewPoint = null;
+
+//     const ctx = lassoCanvas.getContext("2d");
+
+//     ctx.beginPath();
+//     ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+//     for (let p of lassoPoints) ctx.lineTo(p.x, p.y);
+//     ctx.closePath();
+//     ctx.stroke();
+
+//     createLassoMask();
+// }
+
 function closeLasso() {
     lassoActive = false;
     previewPoint = null;
 
+    createLassoMask();
+    startMarchingAnts();
+}
+
+
+
+// =========================
+// MARCHING ANTS
+// =========================
+let antsOffset = 0;
+let antsInterval = null;
+
+function startMarchingAnts() {
+    if (antsInterval) clearInterval(antsInterval);
+
+    antsInterval = setInterval(() => {
+        antsOffset += 1;
+        drawMarchingAnts();
+    }, 30);
+}
+
+function stopMarchingAnts() {
+    if (antsInterval) {
+        clearInterval(antsInterval);
+        antsInterval = null;
+    }
+}
+
+function drawMarchingAnts() {
     const ctx = lassoCanvas.getContext("2d");
+    ctx.clearRect(0, 0, lassoCanvas.width, lassoCanvas.height);
+
+    if (lassoPoints.length < 2) return;
 
     ctx.beginPath();
     ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
     for (let p of lassoPoints) ctx.lineTo(p.x, p.y);
     ctx.closePath();
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#ffffff"; // białe mrówki
+    ctx.setLineDash([6, 4]);
+    ctx.lineDashOffset = -antsOffset;
     ctx.stroke();
 
-    createLassoMask();
+    // czarne mrówki (druga warstwa)
+    ctx.strokeStyle = "#000000";
+    ctx.lineDashOffset = -(antsOffset + 6);
+    ctx.stroke();
 }
+
+
+function clearMarchingAnts() {
+    stopMarchingAnts(); // zatrzymuje animację
+
+    const ctx = lassoCanvas.getContext("2d");
+    ctx.clearRect(0, 0, lassoCanvas.width, lassoCanvas.height);
+}
+
+
 
 // =========================
 // MASK CANVAS
