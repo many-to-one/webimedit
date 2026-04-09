@@ -33,6 +33,10 @@
 
         <input type="file" id="importLayerInput" accept="image/*" style="display:none">
 
+        <button class="toolBtn" id="tool-lasso" title="Lasso">
+            <img src="static/icons/lasso.svg" alt="lasso">
+        </button>
+
         <button class="toolBtn" id="tool-eraser" title="Eraser">
             <img src="static/icons/eraser.svg" alt="eraser">
         </button>
@@ -128,6 +132,7 @@
 
     <div class="card-img" style="position:relative; overflow:hidden;">
       <canvas id="glcanvas" width="800" height="600" style="display:block;"></canvas>
+      <canvas id="lassoCanvas"></canvas>
     </div>
 
 
@@ -328,6 +333,8 @@
 <script src="/static/js/transform.js"></script>
 <script src="/static/js/scale.js"></script>
 <script src="/static/js/layers.js"></script>
+
+<script src="/static/js/lasso.js"></script>
 
 <script src="/static/js/zoom.js"></script>
 <script src="/static/js/ui_helpers.js"></script>

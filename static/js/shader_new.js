@@ -5,66 +5,52 @@ if(!gl){ alert('WebGL not supported'); throw new Error('WebGL not supported'); }
 
 
 /* Vertex shader */
-// const vsSrc = `
-// attribute vec2 a_pos;
-// attribute vec2 a_uv;
-// varying vec2 v_uv;
 
-// uniform float u_scale;
-// uniform float u_rotation;
-// uniform vec2 u_translate;
 
-// void main() {
-//   v_uv = a_uv;
 
-//   float s = sin(u_rotation);
-//   float c = cos(u_rotation);
 
-//   vec2 pos = a_pos * u_scale;
+// const lsSrc = `
 
-//   pos = vec2(
-//     pos.x * c - pos.y * s,
-//     pos.x * s + pos.y * c
-//   );
+  // precision mediump float;
 
-//   pos += u_translate;
+  // varying vec2 v_uv;
 
-//   gl_Position = vec4(pos, 0.0, 1.0);
-// }
-// `;
+  // uniform sampler2D u_image;
+  // uniform sampler2D u_mask;
+
+  // uniform float eraseMode;
+  // uniform float brushMode;
+  // uniform float fillMode;
+
+  // uniform vec4 brushColor;
+  // uniform float brushStrength;
+
+  // uniform vec4 fillColor;
 
 //   void main() {
-//     v_uv = a_uv;
+//       vec4 color = texture2D(u_image, v_uv);
+//       float mask = texture2D(u_mask, v_uv).r;
 
-//     // convert quad from [-1..1] to [0..layerSize]
-//     vec2 pos = a_pos * 0.5 + 0.5;
-//     pos *= u_layerSize;
+//       // ERASE
+//       if (eraseMode == 1.0 && mask > 0.5) {
+//           discard;
+//       }
 
-//     // 🔥 move origin to center
-//     pos -= u_layerSize * 0.5;
+//       // BRUSH
+//       if (brushMode == 1.0 && mask > 0.5) {
+//           color = mix(color, brushColor, brushStrength);
+//       }
 
-//     // 🔥 apply scale
-//     pos *= u_scale;
+//       // FILL
+//       if (fillMode == 1.0 && mask > 0.5) {
+//           color = fillColor;
+//       }
 
-//     // 🔥 apply rotation
-//     float s = sin(u_rotation);
-//     float c = cos(u_rotation);
-//     pos = vec2(
-//         pos.x * c - pos.y * s,
-//         pos.x * s + pos.y * c
-//     );
+//       gl_FragColor = color;
+//   }
 
-//     // 🔥 move origin back
-//     pos += u_layerSize * 0.5;
+// `
 
-//     // 🔥 apply translation (in pixels)
-//     pos += u_translate;
-
-//     // convert from pixels → NDC
-//     vec2 ndc = (pos / u_resolution) * 2.0 - 1.0;
-
-//     gl_Position = vec4(ndc, 0.0, 1.0);
-// }
 
 const vsSrc = `
   attribute vec2 a_pos;
@@ -121,11 +107,22 @@ void main() {
 
 /* Fragment shader: Basic + Curve + HSL + Calibration + Mask */
 const fsSrc = `
+
 precision mediump float;
 varying vec2 v_uv;
 uniform sampler2D u_tex;
-
 uniform sampler2D u_mask;
+
+  uniform sampler2D u_image;
+
+  uniform float eraseMode;
+  uniform float brushMode;
+  uniform float fillMode;
+
+  uniform vec4 brushColor;
+  uniform float brushStrength;
+
+  uniform vec4 fillColor;
 
 /* Basic adjustments */
 uniform float u_temp;   // -1..1
@@ -293,11 +290,30 @@ void main(){
   rgb = hsl2rgb(p);
 
   // 🧠 Apply mask alpha
+  // float maskAlpha = texture2D(u_mask, v_uv).a;
+  // gl_FragColor = vec4(rgb, tex.a * maskAlpha);
+
+  // 🧠 Pobierz maskę
+  float mask = texture2D(u_mask, v_uv).r;
+
+  // ERASE
+  if (eraseMode == 1.0 && mask > 0.5) {
+      discard;
+  }
+
+  // BRUSH
+  if (brushMode == 1.0 && mask > 0.5) {
+      rgb = mix(rgb, brushColor.rgb, brushStrength);
+  }
+
+  // FILL
+  if (fillMode == 1.0 && mask > 0.5) {
+      rgb = fillColor.rgb;
+  }
+
+  // 🧠 Apply alpha mask (jak wcześniej)
   float maskAlpha = texture2D(u_mask, v_uv).a;
   gl_FragColor = vec4(rgb, tex.a * maskAlpha);
-  // vec4 color = texture2D(u_tex, v_texCoord);
-  // float mask = texture2D(u_mask, v_texCoord).r;  // assuming mask is grayscale
-  // gl_FragColor = vec4(color.rgb, color.a * mask);
 
 }
 `;
