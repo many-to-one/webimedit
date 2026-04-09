@@ -403,25 +403,6 @@ importLayerInput.onchange = async e => {
 };
 
 
-// moveBtn.onclick = () => {
-//     console.log("moveBtn clicked", moveBtn);
-//     let visibleBox = document.getElementById("transBox");
-//     let boxHandles = document.querySelectorAll('.handle');
-//     if (!visibleBox) {
-//         drawTransformBox(activeTransformLayer.transform.scale);
-//         draw();
-//     };
-    
-//     if (visibleBox.style.display === "none") {
-//         visibleBox.style.display = "block";
-//         boxHandles.forEach(h => h.style.display = "block");
-//     console.log("transBox active")
-//     } else {   
-//         visibleBox.style.display = "none";
-//         boxHandles.forEach(h => h.style.display = "none");
-//     }
-// };
-
 
 let activeTransformLayerWidth;
 let activeTransformLayerHeight;

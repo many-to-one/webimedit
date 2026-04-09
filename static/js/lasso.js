@@ -172,10 +172,51 @@ function closeLasso() {
     previewPoint = null;
 
     createLassoMask();
+    removeLassoSelectionFromActiveLayer();
     startMarchingAnts();
 }
 
 
+
+// =========================
+// DELETE SELECTED AREA FROM ACTIVE LAYER
+
+function removeLassoSelectionFromActiveLayer() {
+    console.log("Removing lasso selection from active layer");
+    const image = images[currentImageIndex];
+    if (!image || !Array.isArray(image.layers)) return;
+
+    const layer = image.layers[image.activeLayer];
+    if (!layer) return;
+
+    if (!layer.mask) {
+        const maskCanvas = document.createElement("canvas");
+        maskCanvas.width = image.bmp.width;
+        maskCanvas.height = image.bmp.height;
+        const initCtx = maskCanvas.getContext("2d");
+        initCtx.fillStyle = "rgba(255,255,255,1)";
+        initCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
+        layer.mask = maskCanvas;
+    }
+
+    const maskCtx = layer.mask.getContext("2d");
+    const maskHeight = layer.mask.height;
+
+    maskCtx.save();
+    maskCtx.globalCompositeOperation = "destination-out";
+    maskCtx.beginPath();
+    maskCtx.moveTo(lassoPoints[0].x, maskHeight - lassoPoints[0].y);
+    for (let p of lassoPoints) {
+        maskCtx.lineTo(p.x, maskHeight - p.y);
+    }
+    maskCtx.closePath();
+    maskCtx.fillStyle = "rgba(0,0,0,1)";
+    maskCtx.fill();
+    maskCtx.restore();
+
+    updateMaskTexture(layer);
+    draw();
+}
 
 // =========================
 // MARCHING ANTS
