@@ -56,13 +56,36 @@ glcanvas.addEventListener("mousemove", e => {
 // =========================
 // GET MOUSE POSITION
 // =========================
+
 function getMousePos(e) {
-    const rect = glcanvas.getBoundingClientRect();
-    return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-    };
+    const rect = lassoCanvas.getBoundingClientRect();
+
+    const scaleX = lassoCanvas.width  / rect.width;
+    const scaleY = lassoCanvas.height / rect.height;
+
+    const x = (e.clientX - rect.left) * scaleX;
+    const yScreen = (e.clientY - rect.top);
+    const y = (rect.height - yScreen) * scaleY; // odwrócenie + skala
+
+    console.log("Mouse pos (canvas):", { x, y });
+
+    return { x, y };
 }
+
+
+// document.addEventListener("click", e => {
+//     console.log("click", e.target);
+//     image = images[currentImageIndex];
+//     layer = image.layers[image.activeLayer];
+//     console.log("active layer", layer.transform);
+
+//      // 5. Punkt kliknięcia
+//     const px = e.clientX;
+//     const py = e.clientY;
+//     console.log("click at", px, py);
+
+// });
+
 
 // =========================
 // DRAW LASSO

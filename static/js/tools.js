@@ -1053,16 +1053,5 @@ function processBrushQueue() {
 
 
 
-// document.addEventListener("click", e => {
-//     console.log("click", e.target);
-//     image = images[currentImageIndex];
-//     layer = image.layers[image.activeLayer];
-//     console.log("active layer", layer.transform);
 
-//      // 5. Punkt kliknięcia
-//     const px = e.clientX;
-//     const py = e.clientY;
-//     console.log("click at", px, py);
-
-// });
 
