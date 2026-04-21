@@ -152,13 +152,61 @@ function closeLasso() {
 // =========================
 // DELETE SELECTED AREA FROM ACTIVE LAYER
 
-function removeLassoSelectionFromActiveLayer() {
-    console.log("Removing lasso selection from active layer");
-    const image = images[currentImageIndex];
-    if (!image || !Array.isArray(image.layers)) return;
+// function removeLassoSelectionFromActiveLayer() {
+//     console.log("Removing lasso selection from active layer");
+//     const image = images[currentImageIndex];
+//     if (!image || !Array.isArray(image.layers)) return;
 
+//     const layer = image.layers[image.activeLayer];
+//     if (!layer) return;
+
+//     if (!layer.mask) {
+//         const maskCanvas = document.createElement("canvas");
+//         maskCanvas.width = image.bmp.width;
+//         maskCanvas.height = image.bmp.height;
+//         const initCtx = maskCanvas.getContext("2d");
+//         initCtx.fillStyle = "rgba(255,255,255,1)";
+//         initCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
+//         layer.mask = maskCanvas;
+//     }
+
+//     const maskCtx = layer.mask.getContext("2d");
+//     const maskHeight = layer.mask.height;
+
+//     maskCtx.save();
+//     maskCtx.globalCompositeOperation = "destination-out";
+//     maskCtx.beginPath();
+//     maskCtx.moveTo(lassoPoints[0].x, maskHeight - lassoPoints[0].y);
+
+//     const rect = glcanvas.getBoundingClientRect();
+//     const scaleX = layer.mask.width  / rect.width;
+//     const scaleY = layer.mask.height / rect.height;
+
+//     maskCtx.moveTo(
+//         lassoPoints[0].x * scaleX,
+//         layer.mask.height - lassoPoints[0].y * scaleY
+//     );
+
+//     for (let p of lassoPoints) {
+//         maskCtx.lineTo(
+//             p.x * scaleX,
+//             layer.mask.height - p.y * scaleY
+//         );
+//     }
+
+
+//     maskCtx.closePath();
+//     maskCtx.fillStyle = "rgba(0,0,0,1)";
+//     maskCtx.fill();
+//     maskCtx.restore();
+
+//     updateMaskTexture(layer);
+//     draw();
+// }
+
+function removeLassoSelectionFromActiveLayer() {
+    const image = images[currentImageIndex];
     const layer = image.layers[image.activeLayer];
-    if (!layer) return;
 
     if (!layer.mask) {
         const maskCanvas = document.createElement("canvas");
@@ -171,15 +219,33 @@ function removeLassoSelectionFromActiveLayer() {
     }
 
     const maskCtx = layer.mask.getContext("2d");
-    const maskHeight = layer.mask.height;
+
+    const maskW = layer.mask.width;
+    const maskH = layer.mask.height;
+
+    const lassoW = lassoCanvas.width;
+    const lassoH = lassoCanvas.height;
+
+    const scaleX = maskW / lassoW;
+    const scaleY = maskH / lassoH;
 
     maskCtx.save();
     maskCtx.globalCompositeOperation = "destination-out";
     maskCtx.beginPath();
-    maskCtx.moveTo(lassoPoints[0].x, maskHeight - lassoPoints[0].y);
+
+    // 🔥 UWAGA: NIE odwracamy Y, bo getMousePos już to zrobił
+    maskCtx.moveTo(
+        lassoPoints[0].x * scaleX,
+        maskH - (lassoPoints[0].y * scaleY)
+    );
+
     for (let p of lassoPoints) {
-        maskCtx.lineTo(p.x, maskHeight - p.y);
+        maskCtx.lineTo(
+            p.x * scaleX,
+            maskH - (p.y * scaleY)
+        );
     }
+
     maskCtx.closePath();
     maskCtx.fillStyle = "rgba(0,0,0,1)";
     maskCtx.fill();
@@ -188,6 +254,9 @@ function removeLassoSelectionFromActiveLayer() {
     updateMaskTexture(layer);
     draw();
 }
+
+
+
 
 // =========================
 // MARCHING ANTS
