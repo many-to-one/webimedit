@@ -767,38 +767,17 @@ function setTextureDefaults(gl) {
 // =========================
 // HELPERS
 // =========================
+
 function convertMouseToLayerCoords(mouseX, mouseY, layer, layerWidth, layerHeight) {
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
 
-    const xCanvas = mouseX * scaleX;
-    const yCanvas = mouseY * scaleY;
-    const canvasCenterX = canvas.width / 2;
-    const canvasCenterY = canvas.height / 2;
+    const x = mouseX * (layerWidth / rect.width);
+    const y = mouseY * (layerHeight / rect.height);
 
-    const t = layer.transform || { x: 0, y: 0, scale: 1, rotation: 0 };
-
-    // convert screen-space canvas point to layer-space origin at layer center
-    let localX = (xCanvas - canvasCenterX - t.x) / t.scale;
-    let localY = (yCanvas - canvasCenterY - t.y) / t.scale;
-
-    // undo rotation
-    if (t.rotation && t.rotation !== 0) {
-        const rad = -t.rotation * Math.PI / 180;
-        const cos = Math.cos(rad);
-        const sin = Math.sin(rad);
-        const rotatedX = localX * cos - localY * sin;
-        const rotatedY = localX * sin + localY * cos;
-        localX = rotatedX;
-        localY = rotatedY;
-    }
-
-    return {
-        x: localX + layerWidth / 2,
-        y: localY + layerHeight / 2
-    };
+    return { x, y };
 }
+
+
 
 // =========================
 // MOUSEMOVE – KURSORY + KOLEJKI
@@ -939,11 +918,28 @@ function processEraserQueue() {
     for (const p of pendingEraserPoints) {
         const point = convertMouseToLayerCoords(p.x, p.y, layer, layerWidth, layerHeight);
 
-        const grad = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, eraserRadius);
+        // const grad = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, eraserRadius);
+        // grad.addColorStop(0, `rgba(0,0,0,${eraserPower})`);
+        // grad.addColorStop(1, "rgba(0,0,0,0)");
+        // ctx.fillStyle = grad;
+        // ctx.fillRect(point.x - eraserRadius, point.y - eraserRadius, eraserRadius * 2, eraserRadius * 2);
+        // skalowanie radiusa tak samo jak w brush
+        const scaleX = layerWidth / rect.width;
+        const scaleY = layerHeight / rect.height;
+        const radiusLayer = eraserRadius * scaleX; // lub średnia, jeśli chcesz idealnie izotropowo
+
+        const grad = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, radiusLayer);
         grad.addColorStop(0, `rgba(0,0,0,${eraserPower})`);
         grad.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = grad;
-        ctx.fillRect(point.x - eraserRadius, point.y - eraserRadius, eraserRadius * 2, eraserRadius * 2);
+
+        ctx.fillRect(
+            point.x - radiusLayer,
+            point.y - radiusLayer,
+            radiusLayer * 2,
+            radiusLayer * 2
+        );
+
     }
 
     pendingEraserPoints = [];
@@ -998,22 +994,33 @@ function processBrushQueue() {
     for (const p of pendingBrushPoints) {
         const point = convertMouseToLayerCoords(p.x, p.y, layer, layerWidth, layerHeight);
 
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = layerWidth / rect.width;
+        const scaleY = layerHeight / rect.height;
+        const radiusLayer = brushRadius * scaleX; // albo średnia z X/Y, jeśli chcesz
+
         if (brushShape === "circle") {
             ctx.beginPath();
-            ctx.arc(point.x, point.y, brushRadius, 0, Math.PI * 2);
+            ctx.arc(point.x, point.y, radiusLayer, 0, Math.PI * 2);
             ctx.fill();
         } else if (brushShape === "square") {
-            ctx.fillRect(point.x - brushRadius, point.y - brushRadius, brushRadius * 2, brushRadius * 2);
+            ctx.fillRect(
+                point.x - radiusLayer,
+                point.y - radiusLayer,
+                radiusLayer * 2,
+                radiusLayer * 2
+            );
         } else if (brushShape === "custom" && customBrushImage) {
             ctx.drawImage(
                 customBrushImage,
-                point.x - brushRadius,
-                point.y - brushRadius,
-                brushRadius * 2,
-                brushRadius * 2
+                point.x - radiusLayer,
+                point.y - radiusLayer,
+                radiusLayer * 2,
+                radiusLayer * 2
             );
         }
     }
+
 
     pendingBrushPoints = [];
 

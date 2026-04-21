@@ -99,21 +99,6 @@ function getMousePos(e) {
     return { x, y };
 }
 
-
-// document.addEventListener("click", e => {
-//     console.log("click", e.target);
-//     image = images[currentImageIndex];
-//     layer = image.layers[image.activeLayer];
-//     console.log("active layer", layer.transform);
-
-//      // 5. Punkt kliknięcia
-//     const px = e.clientX;
-//     const py = e.clientY;
-//     console.log("click at", px, py);
-
-// });
-
-
 // =========================
 // DRAW LASSO
 // =========================
@@ -152,20 +137,6 @@ function drawLasso() {
 // =========================
 // CLOSE LASSO
 // =========================
-// function closeLasso() {
-//     lassoActive = false;
-//     previewPoint = null;
-
-//     const ctx = lassoCanvas.getContext("2d");
-
-//     ctx.beginPath();
-//     ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
-//     for (let p of lassoPoints) ctx.lineTo(p.x, p.y);
-//     ctx.closePath();
-//     ctx.stroke();
-
-//     createLassoMask();
-// }
 
 function closeLasso() {
     lassoActive = false;
