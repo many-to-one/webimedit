@@ -73,6 +73,9 @@ canvas.addEventListener("mousemove", e => {
     brushCursor.style.left = `${e.clientX}px`;
     brushCursor.style.top = `${e.clientY}px`;
 
+    console.log("mousemove layer.canvas size:", layer.canvas.width, layer.canvas.height);
+    console.log("mousemove WebGL layer size:", layer.width, layer.height);
+
     if (toolMode === "brush") {
         brushCursor.style.display = "block";
         brushCursor.style.width = `${brushRadius * 2}px`;
@@ -145,31 +148,50 @@ function processBrushQueue() {
     const scaleX = layer.canvas.width / rect.width;
     const scaleY = layer.canvas.height / rect.height;
 
+    const radiusX = brushRadius * scaleX;
+    const radiusY = brushRadius * scaleY;
+
     const ctx = layer.canvas.getContext("2d");
     ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = brushColor;
 
     for (const p of pendingBrushPoints) {
-        const x = p.x * scaleX;
-        const y = p.y * scaleY;
+        // const x = p.x * scaleX;
+        // const y = p.y * scaleY;
+
+        console.log("layer.canvas size:", layer.canvas.width, layer.canvas.height);
+        console.log("WebGL layer size:", layer.width, layer.height);
+
+        const { x, y } = screenToLayerCoords(p.x + rect.left, p.y + rect.top, canvas, layer);
 
         if (brushShape === "circle") {
             ctx.beginPath();
             ctx.arc(x, y, brushRadius, 0, Math.PI * 2);
+            // ctx.arc(x, y, Math.max(radiusX, radiusY), 0, Math.PI * 2);
             ctx.fill();
         }
+        //     ctx.fill();
+        // }
 
         if (brushShape === "square") {
-            ctx.fillRect(x - brushRadius, y - brushRadius, brushRadius * 2, brushRadius * 2);
+            // ctx.fillRect(x - brushRadius, y - brushRadius, brushRadius * 2, brushRadius * 2);
+            ctx.fillRect(x - radiusX, y - radiusY, radiusX * 2, radiusY * 2);
         }
 
         if (brushShape === "custom" && customBrushImage) {
+            // ctx.drawImage(
+            //     customBrushImage,
+            //     x - brushRadius,
+            //     y - brushRadius,
+            //     brushRadius * 2,
+            //     brushRadius * 2
+            // );
             ctx.drawImage(
                 customBrushImage,
-                x - brushRadius,
-                y - brushRadius,
-                brushRadius * 2,
-                brushRadius * 2
+                x - radiusX,
+                y - radiusY,
+                radiusX * 2,
+                radiusY * 2
             );
         }
     }
@@ -178,6 +200,8 @@ function processBrushQueue() {
 
     // 🔸 AKTUALIZACJA TEKSTURY GPU
     gl.bindTexture(gl.TEXTURE_2D, layer.tex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
     gl.texImage2D(
         gl.TEXTURE_2D,
         0,
@@ -193,4 +217,37 @@ function processBrushQueue() {
 }
 
 
+
+function screenToLayerCoords(screenX, screenY, canvas, layer) {
+    const rect = canvas.getBoundingClientRect();
+
+    // 1. screen → canvas local
+    let x = screenX - rect.left;
+    let y = screenY - rect.top;
+
+    // 2. canvas local → centered coords
+    x -= rect.width / 2;
+    y -= rect.height / 2;
+
+    // 3. undo layer translation
+    x -= layer.transform.x;
+    y -= layer.transform.y;
+
+    // 4. undo rotation
+    const s = Math.sin(-layer.transform.rotation);
+    const c = Math.cos(-layer.transform.rotation);
+
+    let rx = x * c - y * s;
+    let ry = x * s + y * c;
+
+    // 5. undo scale
+    rx /= layer.transform.scale;
+    ry /= layer.transform.scale;
+
+    // 6. move into layer pixel space
+    rx += layer.canvas.width / 2;
+    ry += layer.canvas.height / 2;
+
+    return { x: rx, y: ry };
+}
 

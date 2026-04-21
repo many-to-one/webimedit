@@ -263,7 +263,7 @@ applyFillBtn.onclick = () => {
     gl.bindTexture(gl.TEXTURE_2D, layer.tex);
 
     gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
 
     gl.texImage2D(
         gl.TEXTURE_2D,
@@ -307,6 +307,8 @@ function applyFill() {
     gl.bindTexture(gl.TEXTURE_2D, layer.tex);
 
     setTextureDefaults(gl);
+
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
     gl.texImage2D(
         gl.TEXTURE_2D,
@@ -1017,6 +1019,8 @@ function processBrushQueue() {
 
     gl.bindTexture(gl.TEXTURE_2D, layer.tex);
     setTextureDefaults(gl);
+
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
     gl.texImage2D(
         gl.TEXTURE_2D,

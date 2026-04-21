@@ -307,7 +307,7 @@ function uploadMaskToWebGL() {
     gl.bindTexture(gl.TEXTURE_2D, maskTexture);
 
     // flip Y so mask matches WebGL UV
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
     gl.texImage2D(
         gl.TEXTURE_2D,
