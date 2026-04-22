@@ -9,7 +9,7 @@ import os
 
 router = APIRouter()
 
-FLUX_API_KEY = "<API_KEY>"
+FLUX_API_KEY = "22efede887d1d22d19252eb43295a3c4" #"<API_KEY>"
 FLUX_URL = "https://api.fluxapi.ai/api/v1/flux/kontext/generate"
 
 
@@ -18,7 +18,7 @@ FLUX_URL = "https://api.fluxapi.ai/api/v1/flux/kontext/generate"
 def upload(file: UploadFile = File(...)):
     print("Received file:", file.filename)
     filename = f"{uuid.uuid4()}.png"
-    path = f"static/outputs/{filename}"
+    path = f"static/ai_outputs/{filename}"
 
     with open(path, "wb") as f:
         f.write(file.file.read())
@@ -82,14 +82,19 @@ def get_result(task_id: str):
 
 class EditRequest(BaseModel):
     prompt: str
-    image: str  # base64
+    inputImage: str  # URL (NIE base64!)
 
 @router.post("/ai/edit")
 def edit_image(data: EditRequest):
+
     payload = {
         "prompt": data.prompt,
-        "image": data.image,
-        "strength": 0.7
+        "inputImage": data.inputImage,  # 🔥 KLUCZOWE
+        "enableTranslation": True,
+        "aspectRatio": "1:1",
+        "outputFormat": "jpeg",
+        "model": "flux-kontext-pro",
+        "safetyTolerance": 2
     }
 
     headers = {
@@ -97,10 +102,13 @@ def edit_image(data: EditRequest):
         "Content-Type": "application/json"
     }
 
-    r = requests.post("https://api.fluxapi.ai/v1/edit", json=payload, headers=headers)
+    r = requests.post(FLUX_URL, json=payload, headers=headers)
+
+    if r.status_code != 200:
+        return {"error": r.text}
 
     result = r.json()
 
     return {
-        "image": result["image"]
+        "taskId": result["data"]["taskId"]  # 🔥 tak samo jak generate
     }

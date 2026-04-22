@@ -142,11 +142,8 @@ async function editCurrentLayer(prompt) {
 
     const imageUrl = await uploadLayer(layer);
 
-    const res = await fetch("/ai/edit", {
+    fetch("/ai/edit", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
         body: JSON.stringify({
             prompt,
             inputImage: imageUrl
