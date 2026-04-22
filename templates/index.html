@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="/static/css/fill.css">
 <link rel="stylesheet" href="/static/css/toolpanel.css">
 <link rel="stylesheet" href="/static/css/handlers.css">
+<link rel="stylesheet" href="/static/css/ai.css">
 
 </head>
 <body>
@@ -144,6 +145,24 @@
 
   <aside>
     <div id="controls">
+
+      <div class="card ai-panel">
+        <h3>AI Assistant</h3>
+
+        <textarea 
+          id="aiPrompt" 
+          placeholder="Np. usuń tło, popraw kolory, dodaj cień, zamień niebo..."
+        ></textarea>
+
+        <div class="ai-row">
+          <button id="aiGenerate">Generate</button>
+          <!-- <button id="aiEditBtn">Edit Image</button> -->
+           <button onclick="editCurrentLayer(aiPrompt.value)">Edit current layer</button>
+        </div>
+
+        <div id="aiStatus">Ready</div>
+      </div>
+
       <!-- Basic panel -->
       <div class="card">
         <h3>Basic</h3>
@@ -328,7 +347,7 @@
 <script src="/static/js/shader_new.js"></script>
 <script src="/static/js/uniforms.js"></script>
 <script src="/static/js/texture.js"></script>
-<!-- <script src="/static/js/draw.js"></script> -->
+
 <script src="/static/js/tools.js"></script>
 <script src="/static/js/transform.js"></script>
 <script src="/static/js/scale.js"></script>

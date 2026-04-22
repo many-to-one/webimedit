@@ -7,7 +7,11 @@ from hsl import apply_hsl_adjustment
 import io, os, uuid, base64
 import rawpy
 
+from routes.ai_router import router as ai_router
+
 app = FastAPI()
+
+app.include_router(ai_router)
 
 # Serve static files (CSS, JS, etc.)
 # Mount static files at /static
@@ -24,7 +28,8 @@ os.makedirs(RESULT_DIR, exist_ok=True)
 # Keep current image in memory as PIL Image (RGBA)
 CURRENT_IMAGE = None
 
-print("Static path:", os.path.abspath("static"))
+# print("Static path:", os.path.abspath("static"))
+
 
 @app.get("/")
 async def index():
