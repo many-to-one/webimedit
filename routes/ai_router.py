@@ -9,7 +9,7 @@ import os
 
 router = APIRouter()
 
-FLUX_API_KEY = "22efede887d1d22d19252eb43295a3c4" #"<API_KEY>"
+FLUX_API_KEY = "<API_KEY>"
 FLUX_URL = "https://api.fluxapi.ai/api/v1/flux/kontext/generate"
 
 
