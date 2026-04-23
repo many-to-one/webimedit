@@ -66,8 +66,11 @@ fileInput.addEventListener('change', async () => {
 
         const res = await fetch('/upload', {
           method: 'POST',
-          body: formData
+          body: formData,
+          credentials: 'include'
         });
+
+        // console.log('Upload response:', res);
 
         if (!res.ok) throw new Error('Backend upload failed');
 
