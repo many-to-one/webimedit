@@ -1,6 +1,6 @@
 // Save logic
-const saveStatus = document.getElementById('saveStatus');
-const fileTypeSelect = document.getElementById('fileTypeSelect');
+// const saveStatus = document.getElementById('saveStatus');
+// const fileTypeSelect = document.getElementById('fileTypeSelect');
 
 async function saveWebGLCanvas(filenameBase = 'canvas-image') {
   const width = canvas.width;
@@ -73,6 +73,17 @@ async function saveWebGLCanvas(filenameBase = 'canvas-image') {
 
 saveBtn.addEventListener('click', () => {
   draw(); // ensure GPU buffer is up to date
-  const baseName = filenameInput.value.trim() || 'canvas-image';
+  // const baseName = filenameInput.value.trim() || 'canvas-image';
+  const baseName = filenameInput?.value?.trim() || 'canvas-image';
   saveWebGLCanvas(baseName);
 });
+
+
+
+
+
+// ---------------------------------------
+
+// "GET /ai/image?url=https%3A%2F%2Fbfldeliveryscus.blob.core.windows.net%2Fresults%2F2026%2F04%2F24%2Fa3b50756f0db4bdab5d9284b54cedf69_sample.jpeg%3Fse%3D2026-04-24T17%253A35%253A04Z%26sp%3Dr%26sv%3D2026-02-06%26sr%3Db%26rsct%3Dimage%2Fjpeg%26sig%3Dsbq4wZDiy8e5x0%2FztiN0eNA31%2F9pDJ%252BHTzUHHeoOtTg%253D HTTP/1.1" 200 OK
+// "GET /ai/image?url=https%3A%2F%2Fbfldeliveryprodeu4.blob.core.windows.net%2Fresults%2F2026%2F04%2F24%2F67b3bd064a3a426da2ff097e2785b956_sample.jpeg%3Fse%3D2026-04-24T17%253A26%253A13Z%26sp%3Dr%26sv%3D2026-02-06%26sr%3Db%26rsct%3Dimage%2Fjpeg%26sig%3DvtRpR4QOMTrBl3%2F%2FNyanWgSzUIOh5gY4PzrfJkyBdmw%253D HTTP/1.1" 200 OK
+// "GET /ai/image?url=https%3A%2F%2Fbfldeliveryscus.blob.core.windows.net%2Fresults%2F2026%2F04%2F24%2F3cba618134ad4e23aa5f344fe8e76b19_sample.jpeg%3Fse%3D2026-04-24T18%253A50%253A05Z%26sp%3Dr%26sv%3D2026-02-06%26sr%3Db%26rsct%3Dimage%2Fjpeg%26sig%3D9J1%2FgMhJnqWQGZPZIoWmLV%2Fe10cTZy%252B4GAJdb8L82Kw%253D HTTP/1.1" 200 OK

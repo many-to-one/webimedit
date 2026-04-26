@@ -63,9 +63,12 @@ const vsSrc = `
   uniform vec2 u_translate;    // in pixels
   uniform float u_scale;
   uniform float u_rotation;
+  uniform float u_flipX;
+  uniform float u_flipY;
 
 void main() {
     v_uv = a_uv;
+    // v_uv.y = 1.0 - v_uv.y;   // 🔥 JEDYNY poprawny flip Y
 
     // quad w [0..layerSize]
     vec2 pos = a_pos * 0.5 + 0.5;
@@ -76,6 +79,10 @@ void main() {
 
     // skala
     pos *= u_scale;
+
+    // flip
+    pos.x *= u_flipX;
+    pos.y *= u_flipY;
 
     // rotacja
     float s = sin(u_rotation);
@@ -155,6 +162,11 @@ uniform float u_shadowTint;
 uniform float u_redHue; uniform float u_redSat;
 uniform float u_greenHue; uniform float u_greenSat;
 uniform float u_blueHue; uniform float u_blueSat;
+
+// flip
+uniform float u_flipX;
+uniform float u_flipY;
+
 
 /* Helpers: RGB <-> HSL */
 vec3 rgb2hsl(vec3 c){
@@ -354,6 +366,8 @@ const uRotationLoc  = gl.getUniformLocation(prog, "u_rotation");
 const uTranslateLoc = gl.getUniformLocation(prog, "u_translate");
 const uResolutionLoc = gl.getUniformLocation(prog, "u_resolution");
 const uLayerSizeLoc  = gl.getUniformLocation(prog, "u_layerSize");
+const u_flipX = gl.getUniformLocation(prog, "u_flipX");
+const u_flipY = gl.getUniformLocation(prog, "u_flipY");
 
 
 /* ---------- quad attributes ---------- */

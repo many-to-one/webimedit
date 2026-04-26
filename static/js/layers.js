@@ -7,7 +7,6 @@ const layerPanel = document.getElementById('layerPanel');
 
 
 
-
 function ensureLayerId(layer) {
   if (!layer.id) {
     window.layerIdCounter = (window.layerIdCounter || 0) + 1;
@@ -32,9 +31,6 @@ function createEmptyLayer(name, width, height, sourceImage = null) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
 
   // 🔥 MASKA — każda warstwa musi ją mieć
@@ -52,9 +48,6 @@ function createEmptyLayer(name, width, height, sourceImage = null) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, maskCanvas);
 
   const layer = {
@@ -72,7 +65,9 @@ function createEmptyLayer(name, width, height, sourceImage = null) {
       x: 0,
       y: 0,
       scale: 1,
-      rotation: 0
+      rotation: 0,
+      flipX: 1,
+      flipY: 1
     },
 
     settings: {
@@ -113,6 +108,7 @@ function addLayer(name = `Layer ${images[currentImageIndex].layers.length + 1}`)
 
   // Copy settings from current active layer instead of using defaults
   const currentLayer = image.layers[image.activeLayer];
+
   const sourceSettings = currentLayer ? currentLayer.settings : {
     basic: { ...defaultBasicValues },
     calibration: { ...defaultCalibrationValues },
@@ -127,6 +123,7 @@ function addLayer(name = `Layer ${images[currentImageIndex].layers.length + 1}`)
   image.activeLayer = 0; // newest layer becomes active
   updateLayerUI();       // re-render layer stack
   restoreSliders(image.layers[0].settings); // update sliders
+  resizeGLCanvasToLayer(image.layers[0]);
   draw();                // re-render canvas
 }
 
@@ -137,10 +134,12 @@ function switchLayer(index) {
   image.activeLayer = index;
 
   activeTransformLayer = image.layers[index];
+
   drawTransformBox(activeTransformLayer.transform.scale);
 
   updateLayerUI();
   restoreSliders(image.layers[index].settings);
+  resizeGLCanvasToLayer(image.layers[index]);
   draw();
 }
 

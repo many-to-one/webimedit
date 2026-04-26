@@ -64,7 +64,7 @@ fileInput.addEventListener('change', async () => {
         const formData = new FormData();
         formData.append('file', f);
 
-        const res = await fetch('/upload', {
+        const res = await fetch('/img/upload-image', {
           method: 'POST',
           body: formData,
           credentials: 'include'
@@ -82,7 +82,28 @@ fileInput.addEventListener('change', async () => {
         statusEl.textContent = `Unsupported format: ${f.name}`;
         continue;
       }
-      
+
+      const baseCanvas = document.createElement("canvas");
+      baseCanvas.width = bmp.width;
+      baseCanvas.height = bmp.height;
+
+      const ctx = baseCanvas.getContext("2d");
+      ctx.drawImage(bmp, 0, 0);
+
+      // 🔥 UTWÓRZ TEKSTURĘ
+      const baseTex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, baseTex);
+      setTextureDefaults(gl);
+
+      gl.texImage2D(
+          gl.TEXTURE_2D,
+          0,
+          gl.RGBA,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          baseCanvas
+      );
+
       const image = {
         name: f.name,
         bmp,
@@ -91,11 +112,14 @@ fileInput.addEventListener('change', async () => {
             id: ++window.layerIdCounter,
             name: 'Base',
             visible: true,
+            canvas: baseCanvas, // 🔥 KLUCZOWE
             transform: {
               x: 0,
               y: 0,
               scale: 1,
-              rotation: 0
+              rotation: 0,
+              flipX: 1,
+              flipY: 1
             },
             settings: {
               basic: { ...defaultBasicValues },
@@ -106,6 +130,7 @@ fileInput.addEventListener('change', async () => {
         ],
         activeLayer: 0
       };
+
       images.push(image);
 
       addToGallery(images.length - 1);
@@ -122,6 +147,42 @@ fileInput.addEventListener('change', async () => {
   }
 });
 
+
+
+
+function resizeGLCanvasToLayer(layer) {
+
+    // const container = document.getElementById("editorArea");
+    // const containerWidth = container.clientWidth;
+    // const containerHeight = container.clientHeight;
+
+    const layerW = layer.width;
+    const layerH = layer.height;
+
+    const glcanvas = document.getElementById("glcanvas");
+    glcanvas.width = layerW;
+    glcanvas.height = layerH;
+
+    console.log('resizeGLCanvasToLayer layer -----', layer.width, layer.height)
+    console.log('resizeGLCanvasToLayer glcanvas -----', glcanvas.width, glcanvas.height)
+
+    // const layerAspect = layerW / layerH;
+    // const containerAspect = containerWidth / containerHeight;
+
+    // if (layerAspect > containerAspect) {
+    //     // warstwa szersza niż wysoka → dopasuj szerokość
+    //     glcanvas.width = containerWidth;
+    //     glcanvas.height = containerWidth / layerAspect;
+    // } else {
+    //     // warstwa wyższa niż szeroka → dopasuj wysokość
+    //     glcanvas.height = containerHeight;
+    //     glcanvas.width = containerHeight * layerAspect;
+    // }
+
+    // lassoCanvas musi mieć identyczne wymiary
+    lassoCanvas.width = glcanvas.width;
+    lassoCanvas.height = glcanvas.height;
+}
 
 
 /* HSL groups (dynamic) */
@@ -204,6 +265,9 @@ function selectImage(index) {
 
   setTextureFromImageBitmap(image.bmp, layer);
   activeTransformLayer = layer;
+
+  resizeGLCanvasToLayer(activeTransformLayer);
+
   applySettings(settings);
   draw();
   highlightGallery(index);

@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Lightroom-style Editor — WebGL + HTML controls</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="/static/css/image_editor/main.css">
+<link rel="stylesheet" href="/static/css/image_editor/layers.css">
+<link rel="stylesheet" href="/static/css/image_editor/fill.css">
+<link rel="stylesheet" href="/static/css/image_editor/toolpanel.css">
+<link rel="stylesheet" href="/static/css/image_editor/handlers.css">
+<link rel="stylesheet" href="/static/css/image_editor/ai.css">
+
+</head>
+<body>
+  <main>
+    <h2>Lightroom-like editor (WebGL)</h2>
+
+    <div class="card" id="topToolbar" style="display:flex; gap:12px; align-items:center">
+       <input 
+          id="fileInput" 
+          type="file" 
+          multiple accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,.avif,.cr2,.nef,.arw,.dng,.orf,.raf,.rw2"
+        >
+
+      <div id="status" style="font-size:12px;color:var(--muted);margin-top:6px">No image loaded</div>
+      
+      <!-- TOOLBOX (lewy panel jak w Photoshopie) -->
+        <div id="toolPanel">
+
+        <button class="toolBtn" id="tool-import" title="Import image as new layer">
+          <img src="static/icons/import.svg" alt="import">
+        </button>
+
+        <input type="file" id="importLayerInput" accept="image/*" style="display:none">
+
+        <button class="toolBtn" id="tool-lasso" title="Lasso">
+            <img src="static/icons/lasso.svg" alt="lasso">
+        </button>
+
+        <button class="toolBtn" id="tool-eraser" title="Eraser">
+            <img src="static/icons/eraser.svg" alt="eraser">
+        </button>
+
+        <button class="toolBtn" id="tool-brush" title="Brush">
+            <img src="static/icons/brush.svg" alt="brush">
+        </button>
+
+        <button class="toolBtn" id="tool-fill" title="Fill">
+          <img src="static/icons/fill.svg" alt="fill">
+        </button>
+
+        <button class="toolBtn" id="tool-move" title="Move">
+            <img src="icons/move.svg" alt="move">
+        </button>
+
+        <button class="toolBtn" id="tool-zoom" title="Zoom">
+            <img src="icons/zoom.svg" alt="zoom">
+        </button>
+        </div>
+
+        <!-- PANEL USTAWIEŃ AKTYWNEGO NARZĘDZIA -->
+        <div id="toolSettings">
+
+            <!-- TRANSFORMERS -->
+            <div id="transformSettings" class="settingsGroup" style="display:none">
+              <label>Scale</label>
+              <input type="range" id="layerScale" min="0.1" max="5" step="0.01" value="1">
+
+              <label>Rotation</label>
+              <input type="range" id="layerRotation" min="-180" max="180" step="1" value="0">
+
+              <label>Position X</label>
+              <input type="range" id="layerPosX" min="-1000" max="1000" step="1" value="0">
+
+              <label>Position Y</label>
+              <input type="range" id="layerPosY" min="-1000" max="1000" step="1" value="0">
+
+              <button class="toolBtn" id="tool-flipX" title="flipX">
+                  <!-- <img src="icons/move.svg" alt="move"> --> flipX
+              </button>
+
+              <button class="toolBtn" id="tool-flipY" title="flipY">
+                  <!-- <img src="icons/move.svg" alt="move"> -->
+                   flipY
+              </button>
+          </div>
+
+            <!-- ERASER -->
+            <div id="eraserSettings" class="settingsGroup" style="display:none">
+                <label>Brush Radius</label>
+                <input type="range" id="radiusSlider" min="5" max="150" value="80">
+
+                <label>Erase Power</label>
+                <input type="range" id="powerSlider" min="0" max="1" step="0.01" value="1">
+            </div>
+
+            <!-- BRUSH -->
+             <div id="brushSettings" class="settingsGroup" style="display:none">
+              <label>Brush Color</label>
+              <input type="color" id="brushColor" value="#000000">
+
+              <label>Brush Radius</label>
+              <input type="range" id="brushRadius" min="5" max="150" value="40">
+
+              <label>Brush Shape</label>
+              <select id="brushShape">
+                  <option value="circle">Circle</option>
+                  <option value="square">Square</option>
+                  <option value="custom">Custom (load)</option>
+              </select>
+
+              <input type="file" id="customBrushInput" accept=".png,.jpg,.jpeg,.webp,.gif,.bmp,.abr">
+
+            </div>
+
+            <div id="fillSettings" class="settingsGroup" style="display:none">
+              <label>Fill Color</label>
+              <input type="color" id="fillColor" value="#ffffff">
+
+              <label>Fill Mode</label>
+              <select id="fillMode">
+                  <option value="normal">Normal</option>
+                  <option value="multiply">Multiply</option>
+                  <option value="screen">Screen</option>
+                  <option value="overlay">Overlay</option>
+                  <option value="darken">Darken</option>
+                  <option value="lighten">Lighten</option>
+              </select>
+
+              <button id="applyFillBtn">Apply Fill</button>
+          </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- <div class="card-img" style= "overflow:hidden;">
+      <canvas id="glcanvas" width="800" height="600" style="display:block;"></canvas>
+    </div> -->
+
+    <div class="card-img" id="editorArea" style="position:relative; overflow:hidden;">
+      <canvas id="glcanvas" width="800" height="800" style="display:block;"></canvas> 
+      <canvas id="lassoCanvas"></canvas>
+    </div>
+
+
+
+    <!-- Gallery strip -->
+    <div id="gallery" style="display:flex; overflow-x:auto; gap:8px; margin-top:12px;"></div>
+
+  </main>
+
+  <aside>
+    <div id="controls">
+
+      <div class="card ai-panel">
+        <h3>AI Assistant</h3>
+
+        <textarea 
+          id="aiPrompt" 
+          placeholder="Np. usuń tło, popraw kolory, dodaj cień, zamień niebo..."
+        ></textarea>
+
+        <div class="ai-controls">
+
+          <!-- Aspect ratio -->
+          <div class="ai-control-group">
+            <label>Aspect Ratio</label>
+            <select id="aiAspect">
+              <option value="1:1">1:1 (Square)</option>
+              <option value="16:9">16:9 (Landscape)</option>
+              <option value="9:16">9:16 (Portrait)</option>
+              <option value="4:3">4:3</option>
+              <option value="3:2">3:2</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+
+          <!-- Width / Height -->
+          <div class="ai-control-group ai-size">
+            <div>
+              <label>Width</label>
+              <input type="number" id="aiWidth" value="1024">
+            </div>
+            <div>
+              <label>Height</label>
+              <input type="number" id="aiHeight" value="1024">
+            </div>
+          </div>
+
+        </div>
+        
+        <div class="ai-row">
+          <button id="aiGenerate">Generate</button>
+          <!-- <button id="aiEditBtn">Edit Image</button> -->
+           <button onclick="editCurrentLayer(aiPrompt.value)">Edit current layer</button>
+        </div>
+
+        <div id="aiStatus">Ready</div>
+      </div>
+
+      <!-- Basic panel -->
+      <div class="card">
+        <h3>Basic</h3>
+
+        <div class="card">
+          <label>Zoom: <span id="zoomVal">100%</span></label>
+          <input id="zoomSlider" type="range" min="10" max="300" value="100">
+        </div>
+
+        <div class="row">
+          <label for="temp">Temperature</label>
+          <input id="temp" type="range" min="-2" max="2" step="0.1" value="0">
+          <div class="value" id="tempVal">0</div>
+        </div>
+
+        <div class="row">
+          <label for="tint">Tint</label>
+          <input id="tint" type="range" min="-100" max="100" step="1" value="0">
+          <div class="value" id="tintVal">0</div>
+        </div>
+
+        <div class="row">
+          <label for="exposure">Exposure (stops)</label>
+          <input id="exposure" type="range" min="-2" max="2" step="0.01" value="0">
+          <div class="value" id="exposureVal">0.00</div>
+        </div>
+
+        <div class="row">
+          <label for="contrast">Contrast</label>
+          <input id="contrast" type="range" min="-1" max="1" step="0.01" value="0">
+          <div class="value" id="contrastVal">0.00</div>
+        </div>
+
+        <div class="row">
+          <label for="highlights">Highlights</label>
+          <input id="highlights" type="range" min="-1" max="1" step="0.01" value="0">
+          <div class="value" id="highlightsVal">0.00</div>
+        </div>
+
+        <div class="row">
+          <label for="shadows">Shadows</label>
+          <input id="shadows" type="range" min="-1" max="1" step="0.01" value="0">
+          <div class="value" id="shadowsVal">0.00</div>
+        </div>
+
+        <div class="row">
+          <label for="whites">Whites</label>
+          <input id="whites" type="range" min="-1" max="1" step="0.01" value="0">
+          <div class="value" id="whitesVal">0.00</div>
+        </div>
+
+        <div class="row">
+          <label for="blacks">Blacks</label>
+          <input id="blacks" type="range" min="-1" max="1" step="0.01" value="0">
+          <div class="value" id="blacksVal">0.00</div>
+        </div>
+      </div>
+
+      <!-- Curve -->
+      <div class="card">
+        <h3>Tone Curve (3-pt)</h3>
+        <div class="row">
+          <label for="curveShadow">Curve Shadow</label>
+          <input id="curveShadow" type="range" min="0" max="1" step="0.01" value="0">
+          <div class="value" id="curveShadowVal">0.00</div>
+        </div>
+        <div class="row">
+          <label for="curveMid">Curve Mid</label>
+          <input id="curveMid" type="range" min="0" max="1" step="0.01" value="0.5">
+          <div class="value" id="curveMidVal">0.50</div>
+        </div>
+        <div class="row">
+          <label for="curveHighlight">Curve Highlight</label>
+          <input id="curveHighlight" type="range" min="0" max="1" step="0.01" value="1">
+          <div class="value" id="curveHighlightVal">1.00</div>
+        </div>
+      </div>
+
+      <!-- HSL -->
+      <div class="card">
+        <h3>HSL Bands</h3>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          <button onclick="showHSL('Red')">Red</button>
+          <button onclick="showHSL('Orange')">Orange</button>
+          <button onclick="showHSL('Yellow')">Yellow</button>
+          <button onclick="showHSL('Green')">Green</button>
+          <button onclick="showHSL('Aqua')">Aqua</button>
+          <button onclick="showHSL('Blue')">Blue</button>
+          <button onclick="showHSL('Purple')">Purple</button>
+          <button onclick="showHSL('Magenta')">Magenta</button>
+        </div>
+        <div id="hslContainer"></div>
+      </div>
+
+      <!-- Calibration -->
+      <div class="card">
+        <h3>Calibration</h3>
+
+        <div class="row">
+          <label for="shadowHue">Shadow Hue</label>
+          <input id="shadowHue" type="range" min="-180" max="180" step="1" value="0">
+          <div class="value" id="shadowHueVal">0</div>
+        </div>
+        <div class="row">
+          <label for="shadowTint">Shadow Tint</label>
+          <input id="shadowTint" type="range" min="0" max="2" step="0.01" value="1">
+          <div class="value" id="shadowTintVal">1.00</div>
+        </div>
+
+        <div style="margin-top:6px;font-size:12px;color:var(--muted)">Primaries</div>
+
+        <div class="row">
+          <label for="redHue">Red Hue</label>
+          <input id="redHue" type="range" min="-30" max="30" step="0.5" value="0">
+          <div class="value" id="redHueVal">0</div>
+        </div>
+        <div class="row">
+          <label for="redSat">Red Sat</label>
+          <input id="redSat" type="range" min="0" max="2" step="0.01" value="1">
+          <div class="value" id="redSatVal">1.00</div>
+        </div>
+
+        <div class="row">
+          <label for="greenHue">Green Hue</label>
+          <input id="greenHue" type="range" min="-30" max="30" step="0.5" value="0">
+          <div class="value" id="greenHueVal">0</div>
+        </div>
+        <div class="row">
+          <label for="greenSat">Green Sat</label>
+          <input id="greenSat" type="range" min="0" max="2" step="0.01" value="1">
+          <div class="value" id="greenSatVal">1.00</div>
+        </div>
+
+        <div class="row">
+          <label for="blueHue">Blue Hue</label>
+          <input id="blueHue" type="range" min="-30" max="30" step="0.5" value="0">
+          <div class="value" id="blueHueVal">0</div>
+        </div>
+        <div class="row">
+          <label for="blueSat">Blue Sat</label>
+          <input id="blueSat" type="range" min="0" max="2" step="0.01" value="1">
+          <div class="value" id="blueSatVal">1.00</div>
+        </div>
+      </div>
+
+      <!-- Add Layer -->
+
+      <div class="card">
+        <h3>Layers</h3>
+        <div id="layerPanel" class="layer-panel"></div>
+        <button id="addLayerBtn">+ Add Layer</button>
+      </div>
+
+
+
+      <!-- Save -->
+      <div class="card">
+        <div class="card">
+          <input id="filenameInput" type="text" placeholder="Enter filename" />
+          <select id="fileTypeSelect">
+            <option value="png">PNG (.png)</option>
+            <option value="jpeg">JPEG (.jpeg)</option>
+            <option value="webp">WebP (.webp)</option>
+          </select>
+          <button id="saveBtn">Save Image</button>
+          <div id="saveStatus" style="font-size:12px;color:var(--muted);margin-top:6px">
+            Ready
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </aside>
+
+
+<script src="https://unpkg.com/abr-js/dist/abr.min.js"></script>
+
+<script src="/static/js/image_editor/basic.js"></script>
+<script src="/static/js/image_editor/shader_new.js"></script>
+<script src="/static/js/image_editor/uniforms.js"></script>
+<script src="/static/js/image_editor/texture.js"></script>
+<!-- <script src="/static/js/image_editor/draw.js"></script> -->
+<script src="/static/js/image_editor/tools.js"></script>
+<script src="/static/js/image_editor/transform.js"></script>
+<script src="/static/js/image_editor/scale.js"></script>
+<script src="/static/js/image_editor/layers.js"></script>
+
+<!-- <script src="/static/js/image_editor/"></script> -->
+
+<script src="/static/js/image_editor/ui_helpers.js"></script>
+<script src="/static/js/image_editor/save.js"></script>
+<script src="/static/js/image_editor/draw.js"></script>
+<!-- <script src="/static/js/image_editor/ai_edit.js"></script> -->
+<script src="/static/js/image_editor/ai.js"></script>
+<script src="/static/js/image_editor/lasso.js"></script>
+
+</body>
+</html>

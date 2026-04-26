@@ -20,6 +20,9 @@ function draw() {
 
   gl.useProgram(prog);
 
+  console.log("DRAW image:", images[currentImageIndex]);
+  console.log("DRAW layer:", images[currentImageIndex]?.layers[images[currentImageIndex]?.activeLayer]);
+
   // Draw layers from bottom → top
   // for (let i = visibleLayers.length - 1; i >= 0; i--) {
   //   const layer = visibleLayers[i];
@@ -37,6 +40,13 @@ function draw() {
     gl.uniform1f(uRotationLoc, t.rotation * Math.PI / 180);
     gl.uniform2f(uTranslateLoc, t.x, t.y);
     gl.uniform2f(uResolutionLoc, canvas.width, canvas.height);
+
+    // gl.uniform1f(uFlipXLoc, t.flipX || 1);
+    // gl.uniform1f(uFlipYLoc, t.flipY || 1);
+
+    gl.uniform1f(u_flipX, layer.transform.flipX);
+    gl.uniform1f(u_flipY, layer.transform.flipY);
+
     
     const w = layer.canvas ? layer.canvas.width  : image.bmp.width;
     const h = layer.canvas ? layer.canvas.height : image.bmp.height;

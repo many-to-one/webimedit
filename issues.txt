@@ -1,0 +1,16 @@
+# JAK PRZENIEŚĆ FOLDER Z ZAWARTOSCĄ NA VPS
+# connect to vps via sftp:
+sftp user@ID
+
+# na serwerze idziemy do miejsca docelowego:
+cd /my/folder/path
+
+# przerzucamy folder tam gdzie wskazaliśmy przez cd:
+# put -r folder lub put plik.py
+
+# I ODWROTNIE Z SERVERA NA LAPTOP:
+scp -r user@ID:backend/imai/app2.py D:\IT\
+
+# Lokalnie z windows do wsl:
+# w WSL piszemy: sudo chown -R $USER:$USER <folder docelowy>
+# dalej przez okna przerzucamy

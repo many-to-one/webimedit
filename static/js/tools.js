@@ -263,7 +263,7 @@ applyFillBtn.onclick = () => {
     gl.bindTexture(gl.TEXTURE_2D, layer.tex);
 
     gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
 
     gl.texImage2D(
         gl.TEXTURE_2D,
@@ -307,8 +307,6 @@ function applyFill() {
     gl.bindTexture(gl.TEXTURE_2D, layer.tex);
 
     setTextureDefaults(gl);
-
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
     gl.texImage2D(
         gl.TEXTURE_2D,
@@ -361,6 +359,9 @@ importLayerInput.onchange = async e => {
 
     // 🔥 używamy createImageBitmap — tak jak przy basic layer
     const bmp = await createImageBitmap(file, { premultiplyAlpha: 'default' });
+    const glcanvas = document.getElementById("glcanvas")
+    glcanvas.width = bmp.width;
+    glcanvas.height = bmp.height;
 
     const image = images[currentImageIndex];
 
@@ -396,6 +397,13 @@ importLayerInput.onchange = async e => {
             }
     image.activeLayer = 0;
     activeTransformLayer = newLayer;
+    // resizeGLCanvasToLayer(activeTransformLayer)
+
+    glcanvas.width = bmp.width;
+    glcanvas.height = bmp.height;
+
+    lassoCanvas.width = glcanvas.width;
+    lassoCanvas.height = glcanvas.height;
 
     console.log("LAYER IMAGE", image.layers[0].canvas.style)
             
@@ -554,6 +562,7 @@ document.addEventListener("scroll", () => {
 
 
 layerRotationInput.oninput = e => {
+    console.log("rotation input**********", e.target.value);
     if (!activeTransformLayer) return;
     activeTransformLayer.transform.rotation = parseFloat(e.target.value);
     drawTransformBox(activeTransformLayer.transform.scale);
@@ -768,14 +777,81 @@ function setTextureDefaults(gl) {
 // HELPERS
 // =========================
 
-function convertMouseToLayerCoords(mouseX, mouseY, layer, layerWidth, layerHeight) {
+// function convertMouseToLayerCoords(mouseX, mouseY, layer, layerWidth, layerHeight) {
+//     const rect = canvas.getBoundingClientRect();
+
+//     const scaleX = canvas.width / rect.width;
+//     const scaleY = canvas.height / rect.height;
+
+//     // 🔥 screen → canvas
+//     const xCanvas = mouseX * scaleX;
+//     const yCanvas = canvas.height - (mouseY * scaleY); // 🔥 FIX Y
+
+//     const canvasCenterX = canvas.width / 2;
+//     const canvasCenterY = canvas.height / 2;
+
+//     const t = layer.transform || { x: 0, y: 0, scale: 1, rotation: 0, flipX: 1, flipY: 1 };
+
+//     // 🔥 canvas → layer space (centered)
+//     let localX = (xCanvas - canvasCenterX - t.x) / t.scale;
+//     let localY = (yCanvas - canvasCenterY - t.y) / t.scale;
+
+//     // 🔥 undo rotation
+//     if (t.rotation && t.rotation !== 0) {
+//         const rad = -t.rotation * Math.PI / 180;
+//         const cos = Math.cos(rad);
+//         const sin = Math.sin(rad);
+
+//         const rotatedX = localX * cos - localY * sin;
+//         const rotatedY = localX * sin + localY * cos;
+
+//         localX = rotatedX;
+//         localY = rotatedY;
+//     }
+
+//     return {
+//         x: localX + layerWidth / 2,
+//         y: localY + layerHeight / 2
+//     };
+// }
+
+function convertMouseToLayerCoords(mouseX, mouseY, layer, layerWidth, layerHeight, flipY) {
     const rect = canvas.getBoundingClientRect();
 
-    const x = mouseX * (layerWidth / rect.width);
-    const y = mouseY * (layerHeight / rect.height);
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
 
-    return { x, y };
+    const xCanvas = mouseX * scaleX;
+    const yCanvas = flipY
+        ? canvas.height - (mouseY * scaleY)
+        : mouseY * scaleY;
+
+    const canvasCenterX = canvas.width / 2;
+    const canvasCenterY = canvas.height / 2;
+
+    const t = layer.transform;
+
+    let localX = (xCanvas - canvasCenterX - t.x) / t.scale;
+    let localY = (yCanvas - canvasCenterY - t.y) / t.scale;
+
+    if (t.rotation !== 0) {
+        const rad = -t.rotation * Math.PI / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+
+        const rx = localX * cos - localY * sin;
+        const ry = localX * sin + localY * cos;
+
+        localX = rx;
+        localY = ry;
+    }
+
+    return {
+        x: localX + layerWidth / 2,
+        y: localY + layerHeight / 2
+    };
 }
+
 
 
 
@@ -906,6 +982,8 @@ function processEraserQueue() {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+        // gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     }
 
     const rect = canvas.getBoundingClientRect();
@@ -916,30 +994,18 @@ function processEraserQueue() {
     ctx.globalCompositeOperation = "destination-out";
 
     for (const p of pendingEraserPoints) {
-        const point = convertMouseToLayerCoords(p.x, p.y, layer, layerWidth, layerHeight);
+        // const point = convertMouseToLayerCoords(p.x, p.y, layer, layerWidth, layerHeight);
 
-        // const grad = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, eraserRadius);
-        // grad.addColorStop(0, `rgba(0,0,0,${eraserPower})`);
-        // grad.addColorStop(1, "rgba(0,0,0,0)");
-        // ctx.fillStyle = grad;
-        // ctx.fillRect(point.x - eraserRadius, point.y - eraserRadius, eraserRadius * 2, eraserRadius * 2);
-        // skalowanie radiusa tak samo jak w brush
-        const scaleX = layerWidth / rect.width;
-        const scaleY = layerHeight / rect.height;
-        const radiusLayer = eraserRadius * scaleX; // lub średnia, jeśli chcesz idealnie izotropowo
+        function convertMouseToLayerCoordsEraser(mouseX, mouseY, layer, layerWidth, layerHeight) {
+            return convertMouseToLayerCoords(mouseX, mouseY, layer, layerWidth, layerHeight, true);
+        }
+        const point = convertMouseToLayerCoordsEraser(p.x, p.y, layer, layerWidth, layerHeight);
 
-        const grad = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, radiusLayer);
+        const grad = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, eraserRadius);
         grad.addColorStop(0, `rgba(0,0,0,${eraserPower})`);
         grad.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = grad;
-
-        ctx.fillRect(
-            point.x - radiusLayer,
-            point.y - radiusLayer,
-            radiusLayer * 2,
-            radiusLayer * 2
-        );
-
+        ctx.fillRect(point.x - eraserRadius, point.y - eraserRadius, eraserRadius * 2, eraserRadius * 2);
     }
 
     pendingEraserPoints = [];
@@ -969,8 +1035,9 @@ function processBrushQueue() {
         c.width = image.bmp.width;
         c.height = image.bmp.height;
         const ctx = c.getContext("2d");
-        // const ctx = c.getContext("2d", { alpha: true });
         ctx.drawImage(image.bmp, 0, 0);
+        // const source = layer.canvas || image.bmp;
+        // ctx.drawImage(source, 0, 0);
         layer.canvas = c;
 
         layer.tex = gl.createTexture();
@@ -980,7 +1047,6 @@ function processBrushQueue() {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false); // 🔥 ważne
     }
 
     const rect = canvas.getBoundingClientRect();
@@ -992,42 +1058,33 @@ function processBrushQueue() {
     ctx.fillStyle = brushColor;
 
     for (const p of pendingBrushPoints) {
-        const point = convertMouseToLayerCoords(p.x, p.y, layer, layerWidth, layerHeight);
+        // const point = convertMouseToLayerCoords(p.x, p.y, layer, layerWidth, layerHeight);
 
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = layerWidth / rect.width;
-        const scaleY = layerHeight / rect.height;
-        const radiusLayer = brushRadius * scaleX; // albo średnia z X/Y, jeśli chcesz
+        function convertMouseToLayerCoordsBrush(mouseX, mouseY, layer, layerWidth, layerHeight) {
+            return convertMouseToLayerCoords(mouseX, mouseY, layer, layerWidth, layerHeight, false);
+        }
+        const point = convertMouseToLayerCoordsBrush(p.x, p.y, layer, layerWidth, layerHeight);
 
         if (brushShape === "circle") {
             ctx.beginPath();
-            ctx.arc(point.x, point.y, radiusLayer, 0, Math.PI * 2);
+            ctx.arc(point.x, point.y, brushRadius, 0, Math.PI * 2);
             ctx.fill();
         } else if (brushShape === "square") {
-            ctx.fillRect(
-                point.x - radiusLayer,
-                point.y - radiusLayer,
-                radiusLayer * 2,
-                radiusLayer * 2
-            );
+            ctx.fillRect(point.x - brushRadius, point.y - brushRadius, brushRadius * 2, brushRadius * 2);
         } else if (brushShape === "custom" && customBrushImage) {
             ctx.drawImage(
                 customBrushImage,
-                point.x - radiusLayer,
-                point.y - radiusLayer,
-                radiusLayer * 2,
-                radiusLayer * 2
+                point.x - brushRadius,
+                point.y - brushRadius,
+                brushRadius * 2,
+                brushRadius * 2
             );
         }
     }
 
-
     pendingBrushPoints = [];
 
     gl.bindTexture(gl.TEXTURE_2D, layer.tex);
-    setTextureDefaults(gl);
-
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
     gl.texImage2D(
         gl.TEXTURE_2D,
@@ -1038,12 +1095,32 @@ function processBrushQueue() {
         layer.canvas
     );
 
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
     draw();
 
     requestAnimationFrame(processBrushQueue);
 }
 
+const flipXBtn = document.getElementById("tool-flipX");
+const flipYBtn = document.getElementById("tool-flipY");
 
+flipXBtn.onclick = () => flipLayerX();
+flipYBtn.onclick = () => flipLayerY();
 
+function flipLayerX() {
+    console.log("flipLayerX", images[currentImageIndex].activeLayer);
+    const index = images[currentImageIndex].activeLayer;
+    const layer = images[currentImageIndex].layers[index];
+    layer.transform.flipX *= -1;
+    draw();
+}
 
+function flipLayerY() {
+    console.log("flipLayerY", images[currentImageIndex].activeLayer);
+    const index = images[currentImageIndex].activeLayer;
+    const layer = images[currentImageIndex].layers[index];
+    layer.transform.flipY *= -1;
+    draw();
+}
 
